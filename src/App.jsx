@@ -112,6 +112,7 @@ function App() {
           metrics={metrics}
           isRunning={isRunning}
           checkpointTrigger={checkpointTrigger}
+          setIsRunning={setIsRunning}
         />
       </div>
 

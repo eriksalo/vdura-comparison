@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './CompetitorSystem.css';
 
-function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
+function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIsRunning }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
   const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
@@ -52,16 +52,11 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
       setTimeout(() => {
         // Check if storage is full (>= 95%)
         if (newTargetFillLevel >= 95) {
-          // Storage is full - show warning
+          // Storage is full - pause simulation
           setCheckpointPhase('idle');
           setSsdActivity(0);
-
-          // Reset after showing full state for 2 seconds
-          setTimeout(() => {
-            console.log('Resetting storage to 0%');
-            setNodeFillLevel(0);
-            setBaselineFillLevel(0);
-          }, 2000);
+          console.log('Competitor storage full - pausing simulation');
+          setIsRunning(false);
         } else {
           // Not full yet - update baseline and go idle
           setBaselineFillLevel(newTargetFillLevel);
