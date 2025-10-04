@@ -4,13 +4,15 @@ import './CompetitorSystem.css';
 function CompetitorSystem({ config, metrics, isRunning }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
-  const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level
+  const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
+  const [baselineFillLevel, setBaselineFillLevel] = useState(0); // Persistent fill level from previous checkpoints
 
   useEffect(() => {
     if (!isRunning) {
       setSsdActivity(0);
       setCheckpointPhase('idle');
       setNodeFillLevel(0);
+      setBaselineFillLevel(0);
       return;
     }
 
@@ -25,20 +27,23 @@ function CompetitorSystem({ config, metrics, isRunning }) {
 
       // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
       const fillDuration = 4000;
-      const targetFillLevel = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23%
+      const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
+      const newTargetFillLevel = Math.min(100, baselineFillLevel + checkpointFillIncrement);
+
       const fillInterval = setInterval(() => {
         setNodeFillLevel(prev => {
-          if (prev >= targetFillLevel) {
+          if (prev >= newTargetFillLevel) {
             clearInterval(fillInterval);
-            return targetFillLevel;
+            return newTargetFillLevel;
           }
-          return prev + (targetFillLevel / (fillDuration / 50));
+          return prev + (checkpointFillIncrement / (fillDuration / 50));
         });
       }, 50);
 
       setTimeout(() => {
         clearInterval(fillInterval);
-        setNodeFillLevel(targetFillLevel);
+        setNodeFillLevel(newTargetFillLevel);
+        setBaselineFillLevel(newTargetFillLevel); // Update baseline for next checkpoint
 
         // Pause for 1 second with nodes full
         setTimeout(() => {
