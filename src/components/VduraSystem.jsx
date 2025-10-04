@@ -28,14 +28,15 @@ function VduraSystem({ config, metrics, isRunning }) {
       setSsdActivity(100);
       setHddActivity(0);
 
-      // Animate VPOD filling
+      // Animate VPOD filling over 2 seconds
+      const fillDuration = 2000;
       const fillInterval = setInterval(() => {
         setVpodFillLevel(prev => {
           if (prev >= 100) {
             clearInterval(fillInterval);
             return 100;
           }
-          return prev + (100 / (writeTime / 50)); // Fill over writeTime
+          return prev + (100 / (fillDuration / 50));
         });
       }, 50);
 
@@ -43,28 +44,33 @@ function VduraSystem({ config, metrics, isRunning }) {
         clearInterval(fillInterval);
         setVpodFillLevel(100);
 
-        // Phase 2: Migrating old checkpoints to HDD (VPODs empty, JBODs fill)
-        setCheckpointPhase('migrating');
-        setSsdActivity(33); // 1GB/s out of 3GB/s capacity
-        setHddActivity(100);
-
-        // Animate VPOD emptying and JBOD filling
-        const migrationTime = writeTime * 2;
-        const emptyInterval = setInterval(() => {
-          setVpodFillLevel(prev => Math.max(0, prev - (100 / (migrationTime / 50))));
-          setJbodFillLevel(prev => Math.min(100, prev + (100 / (migrationTime / 50))));
-        }, 50);
-
+        // Pause for 1 second with VPODs full
         setTimeout(() => {
-          clearInterval(emptyInterval);
-          setVpodFillLevel(0);
+          // Phase 2: Migrating old checkpoints to HDD (VPODs empty, JBODs fill)
+          setCheckpointPhase('migrating');
+          setSsdActivity(33); // 1GB/s out of 3GB/s capacity
+          setHddActivity(100);
 
-          // Phase 3: Idle until next checkpoint
-          setCheckpointPhase('idle');
-          setSsdActivity(0);
-          setHddActivity(0);
-        }, migrationTime);
-      }, writeTime);
+          // Animate VPOD emptying and JBOD filling over 2 seconds
+          const migrationDuration = 2000;
+          const emptyInterval = setInterval(() => {
+            setVpodFillLevel(prev => Math.max(0, prev - (100 / (migrationDuration / 50))));
+            setJbodFillLevel(prev => Math.min(100, prev + (100 / (migrationDuration / 50))));
+          }, 50);
+
+          setTimeout(() => {
+            clearInterval(emptyInterval);
+            setVpodFillLevel(0);
+
+            // Pause for 1 second before next cycle
+            setTimeout(() => {
+              setCheckpointPhase('idle');
+              setSsdActivity(0);
+              setHddActivity(0);
+            }, 1000);
+          }, migrationDuration);
+        }, 1000);
+      }, fillDuration);
     };
 
     cycle();

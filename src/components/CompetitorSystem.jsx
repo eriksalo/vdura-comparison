@@ -23,14 +23,15 @@ function CompetitorSystem({ config, metrics, isRunning }) {
       setCheckpointPhase('writing');
       setSsdActivity(100);
 
-      // Animate node filling
+      // Animate node filling over 4 seconds (2x slower than VDURA)
+      const fillDuration = 4000;
       const fillInterval = setInterval(() => {
         setNodeFillLevel(prev => {
           if (prev >= 100) {
             clearInterval(fillInterval);
             return 100;
           }
-          return prev + (100 / (writeTime / 50)); // Fill over writeTime
+          return prev + (100 / (fillDuration / 50));
         });
       }, 50);
 
@@ -38,10 +39,13 @@ function CompetitorSystem({ config, metrics, isRunning }) {
         clearInterval(fillInterval);
         setNodeFillLevel(100);
 
-        // Idle until next checkpoint
-        setCheckpointPhase('idle');
-        setSsdActivity(0);
-      }, writeTime);
+        // Pause for 1 second with nodes full
+        setTimeout(() => {
+          // Idle until next checkpoint
+          setCheckpointPhase('idle');
+          setSsdActivity(0);
+        }, 1000);
+      }, fillDuration);
     };
 
     cycle();
