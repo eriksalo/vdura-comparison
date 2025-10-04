@@ -21,57 +21,60 @@ function CompetitorSystem({ config, metrics, isRunning }) {
     const writeTime = metrics.competitorCheckpointTime * 1000 / config.simulationSpeed;
 
     const cycle = () => {
-      // Writing checkpoint to all-flash
-      setCheckpointPhase('writing');
-      setSsdActivity(100);
+      setBaselineFillLevel(currentBaseline => {
+        // Writing checkpoint to all-flash
+        setCheckpointPhase('writing');
+        setSsdActivity(100);
 
-      // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
-      const fillDuration = 4000;
-      const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
-      const newTargetFillLevel = Math.min(100, baselineFillLevel + checkpointFillIncrement);
+        // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
+        const fillDuration = 4000;
+        const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
+        const newTargetFillLevel = Math.min(100, currentBaseline + checkpointFillIncrement);
 
-      // Start from baseline and animate to new target
-      setNodeFillLevel(baselineFillLevel);
+        console.log(`Checkpoint - Current: ${currentBaseline.toFixed(1)}%, Adding: ${checkpointFillIncrement.toFixed(1)}%, New Target: ${newTargetFillLevel.toFixed(1)}%`);
 
-      const fillInterval = setInterval(() => {
-        setNodeFillLevel(prev => {
-          if (prev >= newTargetFillLevel) {
-            clearInterval(fillInterval);
-            return newTargetFillLevel;
-          }
-          return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
-        });
-      }, 50);
+        // Start from current baseline
+        setNodeFillLevel(currentBaseline);
 
-      setTimeout(() => {
-        clearInterval(fillInterval);
-        setNodeFillLevel(newTargetFillLevel);
+        const fillInterval = setInterval(() => {
+          setNodeFillLevel(prev => {
+            if (prev >= newTargetFillLevel) {
+              clearInterval(fillInterval);
+              return newTargetFillLevel;
+            }
+            return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
+          });
+        }, 50);
 
-        // Check if storage is full (>= 95%)
-        if (newTargetFillLevel >= 95) {
-          // Storage is full - pause and reset
+        setTimeout(() => {
+          clearInterval(fillInterval);
+          setNodeFillLevel(newTargetFillLevel);
+
+          // Pause for 1 second after fill completes
           setTimeout(() => {
-            setCheckpointPhase('idle');
-            setSsdActivity(0);
+            // Check if storage is full (>= 95%)
+            if (newTargetFillLevel >= 95) {
+              // Storage is full - show warning
+              setCheckpointPhase('idle');
+              setSsdActivity(0);
 
-            // Reset after showing full state for 2 seconds
-            setTimeout(() => {
-              setNodeFillLevel(0);
-              setBaselineFillLevel(0);
-            }, 2000);
+              // Reset after showing full state for 2 seconds
+              setTimeout(() => {
+                console.log('Resetting storage to 0%');
+                setNodeFillLevel(0);
+                setBaselineFillLevel(0);
+              }, 2000);
+            } else {
+              // Not full yet - go idle
+              setCheckpointPhase('idle');
+              setSsdActivity(0);
+            }
           }, 1000);
-        } else {
-          // Not full yet - update baseline and continue
-          setBaselineFillLevel(newTargetFillLevel);
+        }, fillDuration);
 
-          // Pause for 1 second with nodes full
-          setTimeout(() => {
-            // Idle until next checkpoint
-            setCheckpointPhase('idle');
-            setSsdActivity(0);
-          }, 1000);
-        }
-      }, fillDuration);
+        // Return the new baseline for next cycle
+        return newTargetFillLevel >= 95 ? 0 : newTargetFillLevel;
+      });
     };
 
     cycle();
