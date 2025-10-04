@@ -58,11 +58,11 @@ function App() {
   useEffect(() => {
     if (!isRunning) return;
 
-    // Total cycle time: 4s write + 1s pause + 2s migration + 1s pause = 8s base animation
-    const baseCycleTime = 8000;
+    // Total cycle time: 5s write + 2s pause + 3s migration + 2s pause = 12s base animation
+    const baseCycleTime = 12000;
 
     // Speed up simulation to show realistic checkpoint intervals quickly
-    // With 30 min intervals, speedup = 30*60*1000 / 8000 = 225x
+    // With 30 min intervals, speedup = 30*60*1000 / 12000 = 150x
     const autoSpeedupFactor = (config.checkpointIntervalMin * 60 * 1000) / baseCycleTime;
     const effectiveCycleTime = baseCycleTime / (config.simulationSpeed * autoSpeedupFactor);
 

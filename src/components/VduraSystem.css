@@ -222,6 +222,7 @@
   border-radius: 12px;
   background: rgba(99, 102, 241, 0.2);
   font-size: 0.85rem;
+  transition: all 0.5s ease;
 }
 
 .status.active {
@@ -265,6 +266,7 @@
   font-weight: 600;
   z-index: 10;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  transition: all 0.5s ease;
 }
 
 .data-stream {

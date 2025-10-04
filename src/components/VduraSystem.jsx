@@ -32,8 +32,8 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
       setSsdActivity(100);
       setHddActivity(0);
 
-      // Animate VPOD filling over 4 seconds - adds one checkpoint
-      const fillDuration = 4000;
+      // Animate VPOD filling over 5 seconds - adds one checkpoint
+      const fillDuration = 5000;
       const checkpointFillIncrement = (config.checkpointSizeTB / totalVpodCapacity) * 100;
       const newCheckpointCount = checkpointsInVpod + 1;
       const newTargetFillLevel = Math.min(100, (config.checkpointSizeTB * newCheckpointCount / totalVpodCapacity) * 100);
@@ -55,7 +55,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
 
         console.log(`VDURA: ${newCheckpointCount} checkpoints in flash (${newTargetFillLevel.toFixed(1)}% full)`);
 
-        // Pause for 1 second
+        // Pause for 2 seconds
         setTimeout(() => {
           // Check if we need to migrate to HDD
           if (newCheckpointCount >= config.vduraCheckpointsInFlash) {
@@ -66,7 +66,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
             setHddActivity(100);
 
             // Animate VPOD emptying and JBOD filling
-            const migrationDuration = 2000;
+            const migrationDuration = 3000;
             const jbodFillIncrement = (config.checkpointSizeTB * newCheckpointCount / (jbodCount * jbodCapacityTB)) * 100;
 
             const emptyInterval = setInterval(() => {
@@ -79,12 +79,12 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
               setVpodFillLevel(0); // VPODs completely empty
               setCheckpointsInVpod(0); // Reset checkpoint counter
 
-              // Pause for 1 second before next cycle
+              // Pause for 2 seconds before next cycle
               setTimeout(() => {
                 setCheckpointPhase('idle');
                 setSsdActivity(0);
                 setHddActivity(0);
-              }, 1000);
+              }, 2000);
             }, migrationDuration);
           } else {
             // Not full yet - just go idle, keep checkpoints in flash
@@ -92,7 +92,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
             setSsdActivity(0);
             setHddActivity(0);
           }
-        }, 1000);
+        }, 2000);
       }, fillDuration);
     };
 
