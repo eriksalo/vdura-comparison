@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './VduraSystem.css';
 
-function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
+function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDuration }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [hddActivity, setHddActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle'); // idle, writing, migrating
@@ -38,8 +38,8 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
       setVpodStatus('✓ Writing Checkpoint');
       setJbodStatus('Standby');
 
-      // Animate VPOD filling over 5 seconds - adds one checkpoint
-      const fillDuration = 5000;
+      // Animate VPOD filling - duration based on write speed
+      const fillDuration = writeDuration;
       const checkpointFillIncrement = (config.checkpointSizeTB / totalVpodCapacity) * 100;
       const newCheckpointCount = checkpointsInVpod + 1;
       const newTargetFillLevel = Math.min(100, (config.checkpointSizeTB * newCheckpointCount / totalVpodCapacity) * 100);

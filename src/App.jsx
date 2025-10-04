@@ -26,6 +26,7 @@ function App() {
 
   const [isRunning, setIsRunning] = useState(true); // Auto-start simulation
   const [checkpointTrigger, setCheckpointTrigger] = useState(0); // Shared checkpoint trigger for both systems
+  const [writeDurations, setWriteDurations] = useState({ vdura: 5000, competitor: 5000 }); // Animation durations in ms
 
   // Calculate checkpoint times based on configuration
   useEffect(() => {
@@ -46,6 +47,16 @@ function App() {
     // GPU hours gained = time saved × number of GPUs
     const gpuHoursPerCheckpoint = timeSavedHours * config.gpuCount;
 
+    // Calculate animation durations (scale real times to visual duration)
+    // Use a base animation time and scale proportionally
+    const baseAnimationTime = 5000; // 5 seconds for competitor
+    const vduraAnimationTime = baseAnimationTime * (vduraTime / competitorTime); // 2.5s (half of competitor)
+
+    setWriteDurations({
+      vdura: vduraAnimationTime,
+      competitor: baseAnimationTime
+    });
+
     setMetrics(prev => ({
       ...prev,
       vduraCheckpointTime: vduraTime,
@@ -58,11 +69,11 @@ function App() {
   useEffect(() => {
     if (!isRunning) return;
 
-    // Total cycle time: 5s write + 2s pause + 3s migration + 2s pause = 12s base animation
-    const baseCycleTime = 12000;
+    // Total cycle time: competitor write + pause + migration + pause
+    // competitor write (5s) + pause (2s) + migration (3s) + pause (2s) = 12s
+    const baseCycleTime = writeDurations.competitor + 2000 + 3000 + 2000;
 
     // Speed up simulation to show realistic checkpoint intervals quickly
-    // With 30 min intervals, speedup = 30*60*1000 / 12000 = 150x
     const autoSpeedupFactor = (config.checkpointIntervalMin * 60 * 1000) / baseCycleTime;
     const effectiveCycleTime = baseCycleTime / (config.simulationSpeed * autoSpeedupFactor);
 
@@ -76,7 +87,7 @@ function App() {
     }, effectiveCycleTime);
 
     return () => clearInterval(interval);
-  }, [isRunning, metrics.gpuHoursPerCheckpoint, config.checkpointIntervalMin, config.simulationSpeed]);
+  }, [isRunning, metrics.gpuHoursPerCheckpoint, config.checkpointIntervalMin, config.simulationSpeed, writeDurations]);
 
   return (
     <div className="app">
@@ -103,6 +114,7 @@ function App() {
           metrics={metrics}
           isRunning={isRunning}
           checkpointTrigger={checkpointTrigger}
+          writeDuration={writeDurations.vdura}
         />
 
         <div className="vs-divider">VS</div>
@@ -113,6 +125,7 @@ function App() {
           isRunning={isRunning}
           checkpointTrigger={checkpointTrigger}
           setIsRunning={setIsRunning}
+          writeDuration={writeDurations.competitor}
         />
       </div>
 

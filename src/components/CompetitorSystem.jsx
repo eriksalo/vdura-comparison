@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './CompetitorSystem.css';
 
-function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIsRunning }) {
+function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIsRunning, writeDuration }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
   const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
@@ -27,8 +27,8 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
     setSsdActivity(100);
     setDisplayStatus('✓ Writing Checkpoint');
 
-    // Animate node filling over 5 seconds (2x slower than VDURA) to realistic fill level
-    const fillDuration = 5000;
+    // Animate node filling - duration based on write speed
+    const fillDuration = writeDuration;
     const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
     const newTargetFillLevel = Math.min(100, baselineFillLevel + checkpointFillIncrement);
 
