@@ -1,0 +1,107 @@
+import './MetricsDisplay.css';
+
+function MetricsDisplay({ metrics, config }) {
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num);
+  };
+
+  const formatTime = (seconds) => {
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${minutes}m ${secs}s`;
+  };
+
+  // Cost calculations
+  const ssdCostPerTB = 150; // $150/TB for enterprise SSD
+  const hddCostPerTB = 18;  // $18/TB for enterprise HDD
+
+  const vduraSsdCapacity = 12 * 3.84; // 12 SSDs × 3.84TB
+  const vduraHddCapacity = Math.ceil((config.checkpointSizeTB * 10) / 20) * 20; // HDDs for 10 checkpoints
+  const vduraTotalCost = (vduraSsdCapacity * ssdCostPerTB) + (vduraHddCapacity * hddCostPerTB);
+
+  const competitorTotalCapacity = Math.max(12 * 3.84, config.checkpointSizeTB * 10);
+  const competitorTotalCost = competitorTotalCapacity * ssdCostPerTB;
+
+  const costSavings = competitorTotalCost - vduraTotalCost;
+  const costSavingsPercent = ((costSavings / competitorTotalCost) * 100).toFixed(1);
+
+  return (
+    <div className="metrics-display">
+      <h2>Performance Metrics</h2>
+
+      <div className="metrics-grid">
+        <div className="metric-card highlight">
+          <div className="metric-icon">⚡</div>
+          <div className="metric-value">{formatNumber(metrics.gpuHoursGained)}</div>
+          <div className="metric-label">GPU Hours Gained</div>
+          <div className="metric-sublabel">VDURA Advantage</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-value">{metrics.totalCheckpoints}</div>
+          <div className="metric-label">Checkpoints Completed</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-value">
+            {formatTime(metrics.vduraCheckpointTime)}
+            <span className="vs-text">vs</span>
+            {formatTime(metrics.competitorCheckpointTime)}
+          </div>
+          <div className="metric-label">Checkpoint Duration</div>
+          <div className="metric-sublabel">VDURA vs Competitor</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-value">
+            {((metrics.competitorCheckpointTime / metrics.vduraCheckpointTime) || 1).toFixed(2)}x
+          </div>
+          <div className="metric-label">Speed Advantage</div>
+          <div className="metric-sublabel">VDURA Faster</div>
+        </div>
+
+        <div className="metric-card cost">
+          <div className="metric-icon">💰</div>
+          <div className="metric-value">${formatNumber(costSavings)}</div>
+          <div className="metric-label">Cost Savings</div>
+          <div className="metric-sublabel">{costSavingsPercent}% Lower than All-Flash</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-value">
+            ${formatNumber(vduraTotalCost)}
+            <span className="vs-text">vs</span>
+            ${formatNumber(competitorTotalCost)}
+          </div>
+          <div className="metric-label">Total Storage Cost</div>
+          <div className="metric-sublabel">VDURA vs Competitor</div>
+        </div>
+
+        <div className="metric-card productivity">
+          <div className="metric-icon">📈</div>
+          <div className="metric-value">
+            {(metrics.gpuHoursGained * 0.1).toFixed(1)} days
+          </div>
+          <div className="metric-label">Time Saved</div>
+          <div className="metric-sublabel">Based on {config.gpuCount} GPUs</div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-value">
+            {(metrics.gpuHoursPerCheckpoint || 0).toFixed(3)} hrs
+          </div>
+          <div className="metric-label">Hours Gained per Checkpoint</div>
+          <div className="metric-sublabel">Per {config.checkpointIntervalMin}min interval</div>
+        </div>
+      </div>
+
+      <div className="summary-banner">
+        <strong>Summary:</strong> VDURA delivers {((metrics.competitorCheckpointTime / metrics.vduraCheckpointTime) || 1).toFixed(1)}x faster checkpoints
+        while saving ${formatNumber(costSavings)} ({costSavingsPercent}%) in storage costs through intelligent SSD+HDD tiering.
+      </div>
+    </div>
+  );
+}
+
+export default MetricsDisplay;
