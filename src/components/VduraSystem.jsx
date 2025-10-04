@@ -5,8 +5,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [hddActivity, setHddActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle'); // idle, writing, migrating
-  const [vpodFillLevel, setVpodFillLevel] = useState(0); // 0-100% fill level
+  const [vpodFillLevel, setVpodFillLevel] = useState(0); // 0-100% fill level - accumulates
   const [jbodFillLevel, setJbodFillLevel] = useState(0); // 0-100% fill level
+  const [checkpointsInVpod, setCheckpointsInVpod] = useState(0); // Track number of checkpoints stored
 
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
@@ -27,56 +28,71 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
     const jbodCapacityTB = hddsPerJbod * hddCapacityTB;
 
     const cycle = () => {
-      // Phase 1: Writing checkpoint to SSD (VPODs fill up) - 4 seconds to match competitor
+      // Phase 1: Writing checkpoint to SSD (VPODs accumulate)
       setCheckpointPhase('writing');
       setSsdActivity(100);
       setHddActivity(0);
 
-      // Animate VPOD filling over 4 seconds to realistic fill level (same timing as competitor)
+      // Animate VPOD filling over 4 seconds - adds one checkpoint
       const fillDuration = 4000;
-      const targetFillLevel = (config.checkpointSizeTB / totalVpodCapacity) * 100; // 85/138.24 = ~61.5%
+      const checkpointFillIncrement = (config.checkpointSizeTB / totalVpodCapacity) * 100;
+      const newCheckpointCount = checkpointsInVpod + 1;
+      const newTargetFillLevel = Math.min(100, (config.checkpointSizeTB * newCheckpointCount / totalVpodCapacity) * 100);
+
       const fillInterval = setInterval(() => {
         setVpodFillLevel(prev => {
-          if (prev >= targetFillLevel) {
+          if (prev >= newTargetFillLevel) {
             clearInterval(fillInterval);
-            return targetFillLevel;
+            return newTargetFillLevel;
           }
-          return prev + (targetFillLevel / (fillDuration / 50));
+          return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
         });
       }, 50);
 
       setTimeout(() => {
         clearInterval(fillInterval);
-        setVpodFillLevel(targetFillLevel);
+        setVpodFillLevel(newTargetFillLevel);
+        setCheckpointsInVpod(newCheckpointCount);
 
-        // Pause for 1 second with VPODs full
+        console.log(`VDURA: ${newCheckpointCount} checkpoints in flash (${newTargetFillLevel.toFixed(1)}% full)`);
+
+        // Pause for 1 second
         setTimeout(() => {
-          // Phase 2: Migrating checkpoint to HDD (VPODs empty, JBODs accumulate)
-          setCheckpointPhase('migrating');
-          setSsdActivity(33); // 1GB/s out of 3GB/s capacity
-          setHddActivity(100);
+          // Check if we need to migrate to HDD
+          if (newCheckpointCount >= config.vduraCheckpointsInFlash) {
+            // Phase 2: Migrate ALL checkpoints to HDD (VPODs empty completely)
+            console.log(`VDURA: Migrating ${newCheckpointCount} checkpoints to JBOD`);
+            setCheckpointPhase('migrating');
+            setSsdActivity(33); // 1GB/s out of 3GB/s capacity
+            setHddActivity(100);
 
-          // Animate VPOD emptying and JBOD filling
-          const migrationDuration = 2000;
-          const jbodFillIncrement = (config.checkpointSizeTB / (jbodCount * jbodCapacityTB)) * 100; // 85/7020 = ~1.2% per checkpoint
+            // Animate VPOD emptying and JBOD filling
+            const migrationDuration = 2000;
+            const jbodFillIncrement = (config.checkpointSizeTB * newCheckpointCount / (jbodCount * jbodCapacityTB)) * 100;
 
-          // JBOD accumulates, VPOD empties completely
-          const emptyInterval = setInterval(() => {
-            setVpodFillLevel(prev => Math.max(0, prev - (targetFillLevel / (migrationDuration / 50))));
-            setJbodFillLevel(prev => prev + (jbodFillIncrement / (migrationDuration / 50)));
-          }, 50);
+            const emptyInterval = setInterval(() => {
+              setVpodFillLevel(prev => Math.max(0, prev - (newTargetFillLevel / (migrationDuration / 50))));
+              setJbodFillLevel(prev => prev + (jbodFillIncrement / (migrationDuration / 50)));
+            }, 50);
 
-          setTimeout(() => {
-            clearInterval(emptyInterval);
-            setVpodFillLevel(0); // VPODs completely empty - ready for next checkpoint
-
-            // Pause for 1 second before next cycle
             setTimeout(() => {
-              setCheckpointPhase('idle');
-              setSsdActivity(0);
-              setHddActivity(0);
-            }, 1000);
-          }, migrationDuration);
+              clearInterval(emptyInterval);
+              setVpodFillLevel(0); // VPODs completely empty
+              setCheckpointsInVpod(0); // Reset checkpoint counter
+
+              // Pause for 1 second before next cycle
+              setTimeout(() => {
+                setCheckpointPhase('idle');
+                setSsdActivity(0);
+                setHddActivity(0);
+              }, 1000);
+            }, migrationDuration);
+          } else {
+            // Not full yet - just go idle, keep checkpoints in flash
+            setCheckpointPhase('idle');
+            setSsdActivity(0);
+            setHddActivity(0);
+          }
         }, 1000);
       }, fillDuration);
     };
