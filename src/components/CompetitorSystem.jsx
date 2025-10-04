@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import './CompetitorSystem.css';
 
-function CompetitorSystem({ config, metrics, isRunning }) {
+function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
   const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
   const [baselineFillLevel, setBaselineFillLevel] = useState(0); // Persistent fill level from previous checkpoints
 
   useEffect(() => {
-    if (!isRunning) {
-      setSsdActivity(0);
-      setCheckpointPhase('idle');
-      setNodeFillLevel(0);
-      setBaselineFillLevel(0);
+    if (!isRunning || checkpointTrigger === 0) {
       return;
     }
 
-    // Simulate checkpoint cycle
-    const checkpointInterval = config.checkpointIntervalMin * 60 * 1000 / config.simulationSpeed;
-    const writeTime = metrics.competitorCheckpointTime * 1000 / config.simulationSpeed;
+    // Calculate storage needed - all flash
+    const storageNodeCount = 8;
+    const ssdsPerNode = 12;
+    const ssdCapacityTB = 3.84;
+    const nodeCapacityTB = ssdsPerNode * ssdCapacityTB;
+    const totalNodeCapacity = storageNodeCount * nodeCapacityTB;
+    const checkpointSizeTB = config.checkpointSizeTB;
 
     const cycle = () => {
       setBaselineFillLevel(currentBaseline => {
@@ -78,10 +78,7 @@ function CompetitorSystem({ config, metrics, isRunning }) {
     };
 
     cycle();
-    const interval = setInterval(cycle, checkpointInterval);
-
-    return () => clearInterval(interval);
-  }, [isRunning, config, metrics.competitorCheckpointTime]);
+  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, baselineFillLevel]);
 
   // Calculate storage needed - all flash
   const storageNodeCount = 8; // 8 Storage Nodes for active writes

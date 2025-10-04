@@ -23,6 +23,7 @@ function App() {
   });
 
   const [isRunning, setIsRunning] = useState(true); // Auto-start simulation
+  const [checkpointTrigger, setCheckpointTrigger] = useState(0); // Shared checkpoint trigger for both systems
 
   // Calculate checkpoint times based on configuration
   useEffect(() => {
@@ -51,20 +52,24 @@ function App() {
     }));
   }, [config]);
 
-  // Simulation loop
+  // Simulation loop - triggers synchronized checkpoints
   useEffect(() => {
     if (!isRunning) return;
 
+    // Total cycle time: 4s write + 1s pause + 2s migration + 1s pause = 8s
+    const cycleTime = 8000;
+
     const interval = setInterval(() => {
+      setCheckpointTrigger(prev => prev + 1); // Trigger checkpoint in both systems
       setMetrics(prev => ({
         ...prev,
         totalCheckpoints: prev.totalCheckpoints + 1,
         gpuHoursGained: prev.gpuHoursGained + prev.gpuHoursPerCheckpoint,
       }));
-    }, (config.checkpointIntervalMin * 60 * 1000) / config.simulationSpeed);
+    }, cycleTime);
 
     return () => clearInterval(interval);
-  }, [isRunning, config.checkpointIntervalMin, config.simulationSpeed, metrics.gpuHoursPerCheckpoint]);
+  }, [isRunning, metrics.gpuHoursPerCheckpoint]);
 
   return (
     <div className="app">
@@ -90,6 +95,7 @@ function App() {
           config={config}
           metrics={metrics}
           isRunning={isRunning}
+          checkpointTrigger={checkpointTrigger}
         />
 
         <div className="vs-divider">VS</div>
@@ -98,6 +104,7 @@ function App() {
           config={config}
           metrics={metrics}
           isRunning={isRunning}
+          checkpointTrigger={checkpointTrigger}
         />
       </div>
 

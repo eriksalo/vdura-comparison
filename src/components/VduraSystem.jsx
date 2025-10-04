@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './VduraSystem.css';
 
-function VduraSystem({ config, metrics, isRunning }) {
+function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [hddActivity, setHddActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle'); // idle, writing, migrating
@@ -9,18 +9,21 @@ function VduraSystem({ config, metrics, isRunning }) {
   const [jbodFillLevel, setJbodFillLevel] = useState(0); // 0-100% fill level
 
   useEffect(() => {
-    if (!isRunning) {
-      setSsdActivity(0);
-      setHddActivity(0);
-      setCheckpointPhase('idle');
-      setVpodFillLevel(0);
-      setJbodFillLevel(0);
+    if (!isRunning || checkpointTrigger === 0) {
       return;
     }
 
-    // Simulate checkpoint cycle
-    const checkpointInterval = config.checkpointIntervalMin * 60 * 1000 / config.simulationSpeed;
-    const writeTime = metrics.vduraCheckpointTime * 1000 / config.simulationSpeed;
+    // Calculate storage distribution
+    const vpodCount = 3;
+    const ssdsPerVpod = 12;
+    const ssdCapacityTB = 3.84;
+    const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB;
+    const totalVpodCapacity = vpodCount * vpodCapacityTB;
+
+    const jbodCount = 3;
+    const hddsPerJbod = 78;
+    const hddCapacityTB = 30;
+    const jbodCapacityTB = hddsPerJbod * hddCapacityTB;
 
     const cycle = () => {
       // Phase 1: Writing checkpoint to SSD (VPODs fill up) - 4 seconds to match competitor
@@ -78,10 +81,7 @@ function VduraSystem({ config, metrics, isRunning }) {
     };
 
     cycle();
-    const interval = setInterval(cycle, checkpointInterval);
-
-    return () => clearInterval(interval);
-  }, [isRunning, config, metrics.vduraCheckpointTime]);
+  }, [checkpointTrigger, isRunning, config.checkpointSizeTB]);
 
   // Calculate storage distribution
   const vpodCount = 3; // 3 VPODs, each with 12 SSDs
