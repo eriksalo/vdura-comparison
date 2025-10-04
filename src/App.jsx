@@ -12,6 +12,7 @@ function App() {
     checkpointIntervalMin: 0.0833, // ~5 seconds (0.0833 min = 5 sec)
     simulationSpeed: 1, // 1x, 2x, 5x, 10x
     ssdCapacityTB: 3.84, // SSD capacity in TB
+    vduraCheckpointsInFlash: 3, // Number of checkpoints to keep in VDURA flash
   });
 
   const [metrics, setMetrics] = useState({

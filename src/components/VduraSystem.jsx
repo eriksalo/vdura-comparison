@@ -13,11 +13,12 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
       return;
     }
 
-    // Calculate storage distribution
-    const vpodCount = 3;
+    // Calculate storage distribution based on checkpoints to keep in flash
     const ssdsPerVpod = 12;
     const ssdCapacityTB = config.ssdCapacityTB;
     const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB;
+    const requiredFlashCapacity = config.checkpointSizeTB * config.vduraCheckpointsInFlash;
+    const vpodCount = Math.ceil(requiredFlashCapacity / vpodCapacityTB);
     const totalVpodCapacity = vpodCount * vpodCapacityTB;
 
     const jbodCount = 3;
@@ -83,11 +84,12 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
     cycle();
   }, [checkpointTrigger, isRunning, config.checkpointSizeTB]);
 
-  // Calculate storage distribution
-  const vpodCount = 3; // 3 VPODs, each with 12 SSDs
+  // Calculate storage distribution based on checkpoints to keep in flash
   const ssdsPerVpod = 12;
   const ssdCapacityTB = config.ssdCapacityTB;
   const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB;
+  const requiredFlashCapacity = config.checkpointSizeTB * config.vduraCheckpointsInFlash;
+  const vpodCount = Math.ceil(requiredFlashCapacity / vpodCapacityTB);
   const totalVpodCapacity = vpodCount * vpodCapacityTB;
 
   // Calculate realistic fill level based on checkpoint size

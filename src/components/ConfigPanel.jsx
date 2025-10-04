@@ -60,6 +60,18 @@ function ConfigPanel({ config, setConfig, isRunning, setIsRunning }) {
         </div>
 
         <div className="config-item">
+          <label>VDURA Checkpoints in Flash</label>
+          <input
+            type="number"
+            min="1"
+            max="10"
+            value={config.vduraCheckpointsInFlash}
+            onChange={(e) => setConfig({ ...config, vduraCheckpointsInFlash: parseInt(e.target.value) })}
+            disabled={isRunning}
+          />
+        </div>
+
+        <div className="config-item">
           <label>Simulation Speed</label>
           <select
             value={config.simulationSpeed}

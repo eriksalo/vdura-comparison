@@ -30,7 +30,11 @@ function MetricsDisplay({ metrics, config }) {
   const ssdCostPerTB = 150; // $150/TB for enterprise SSD
   const hddCostPerTB = 18;  // $18/TB for enterprise HDD
 
-  const vduraSsdCapacity = 12 * config.ssdCapacityTB; // 12 SSDs × capacity per VPOD
+  // Calculate VDURA VPODs needed based on checkpoints to keep in flash
+  const vpodCapacityTB = 12 * config.ssdCapacityTB; // 12 SSDs × capacity per VPOD
+  const requiredFlashCapacity = config.checkpointSizeTB * config.vduraCheckpointsInFlash;
+  const vpodCount = Math.ceil(requiredFlashCapacity / vpodCapacityTB);
+  const vduraSsdCapacity = vpodCount * vpodCapacityTB;
   const vduraHddCapacity = 78 * 30; // 78 HDDs × 30TB per JBOD = 2340TB
   const vduraTotalCost = (vduraSsdCapacity * ssdCostPerTB) + (vduraHddCapacity * hddCostPerTB);
 
