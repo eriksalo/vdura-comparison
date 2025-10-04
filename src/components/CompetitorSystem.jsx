@@ -71,7 +71,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
         }
       }, 2000);
     }, fillDuration);
-  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, config.ssdCapacityTB, baselineFillLevel]);
+  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, config.ssdCapacityTB]);
 
   // Calculate storage needed - all flash
   const storageNodeCount = 8; // 8 Storage Nodes for active writes
