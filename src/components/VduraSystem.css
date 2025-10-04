@@ -217,12 +217,16 @@
   font-size: 0.9rem;
 }
 
+.tier-stats > div {
+  transition: opacity 1s ease;
+}
+
 .status {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   background: rgba(99, 102, 241, 0.2);
   font-size: 0.85rem;
-  transition: all 0.5s ease;
+  transition: all 1s ease;
 }
 
 .status.active {
@@ -266,7 +270,7 @@
   font-weight: 600;
   z-index: 10;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-  transition: all 0.5s ease;
+  transition: all 1s ease;
 }
 
 .data-stream {
