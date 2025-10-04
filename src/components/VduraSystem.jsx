@@ -60,6 +60,26 @@ function VduraSystem({ config, metrics, isRunning }) {
       </div>
 
       <div className="storage-visualization">
+        {/* GPU to SSD Data Flow */}
+        {checkpointPhase === 'writing' && (
+          <div className="gpu-flow">
+            <div className="gpu-source">
+              <div className="gpu-label">GPU Cluster Writing Checkpoint</div>
+              {Array.from({ length: 30 }).map((_, i) => (
+                <div
+                  key={`gpu-particle-${i}`}
+                  className="data-stream"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDelay: `${i * 0.1}s`,
+                    animationDuration: `${1 + Math.random() * 0.5}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* SSD Tier */}
         <div className="storage-tier">
           <h3>Fast SSD Cache (Write Tier)</h3>
@@ -91,10 +111,26 @@ function VduraSystem({ config, metrics, isRunning }) {
           </div>
         </div>
 
-        {/* Data Flow Arrow */}
+        {/* Data Flow Animation */}
         <div className={`data-flow ${checkpointPhase === 'migrating' ? 'active' : ''}`}>
-          <div className="flow-arrow">↓</div>
-          <div className="flow-label">Auto-tiering to HDD</div>
+          <div className="flow-container">
+            {checkpointPhase === 'migrating' && (
+              <>
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <div
+                    key={`particle-${i}`}
+                    className="data-particle"
+                    style={{
+                      left: `${(i * 5) % 100}%`,
+                      animationDelay: `${i * 0.3}s`,
+                    }}
+                  />
+                ))}
+              </>
+            )}
+            <div className="flow-arrow">↓</div>
+            <div className="flow-label">Auto-tiering to HDD</div>
+          </div>
         </div>
 
         {/* HDD Tier */}
