@@ -20,65 +20,57 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
     const totalNodeCapacity = storageNodeCount * nodeCapacityTB;
     const checkpointSizeTB = config.checkpointSizeTB;
 
-    const cycle = () => {
-      setBaselineFillLevel(currentBaseline => {
-        // Writing checkpoint to all-flash
-        setCheckpointPhase('writing');
-        setSsdActivity(100);
+    // Writing checkpoint to all-flash
+    setCheckpointPhase('writing');
+    setSsdActivity(100);
 
-        // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
-        const fillDuration = 4000;
-        const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
-        const newTargetFillLevel = Math.min(100, currentBaseline + checkpointFillIncrement);
+    // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
+    const fillDuration = 4000;
+    const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
+    const newTargetFillLevel = Math.min(100, baselineFillLevel + checkpointFillIncrement);
 
-        console.log(`Checkpoint - Current: ${currentBaseline.toFixed(1)}%, Adding: ${checkpointFillIncrement.toFixed(1)}%, New Target: ${newTargetFillLevel.toFixed(1)}%`);
+    console.log(`Checkpoint ${checkpointTrigger} - Current: ${baselineFillLevel.toFixed(1)}%, Adding: ${checkpointFillIncrement.toFixed(1)}%, New Target: ${newTargetFillLevel.toFixed(1)}%`);
 
-        // Start from current baseline
-        setNodeFillLevel(currentBaseline);
+    // Start from current baseline
+    setNodeFillLevel(baselineFillLevel);
 
-        const fillInterval = setInterval(() => {
-          setNodeFillLevel(prev => {
-            if (prev >= newTargetFillLevel) {
-              clearInterval(fillInterval);
-              return newTargetFillLevel;
-            }
-            return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
-          });
-        }, 50);
-
-        setTimeout(() => {
+    const fillInterval = setInterval(() => {
+      setNodeFillLevel(prev => {
+        if (prev >= newTargetFillLevel) {
           clearInterval(fillInterval);
-          setNodeFillLevel(newTargetFillLevel);
-
-          // Pause for 1 second after fill completes
-          setTimeout(() => {
-            // Check if storage is full (>= 95%)
-            if (newTargetFillLevel >= 95) {
-              // Storage is full - show warning
-              setCheckpointPhase('idle');
-              setSsdActivity(0);
-
-              // Reset after showing full state for 2 seconds
-              setTimeout(() => {
-                console.log('Resetting storage to 0%');
-                setNodeFillLevel(0);
-                setBaselineFillLevel(0);
-              }, 2000);
-            } else {
-              // Not full yet - go idle
-              setCheckpointPhase('idle');
-              setSsdActivity(0);
-            }
-          }, 1000);
-        }, fillDuration);
-
-        // Return the new baseline for next cycle
-        return newTargetFillLevel >= 95 ? 0 : newTargetFillLevel;
+          return newTargetFillLevel;
+        }
+        return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
       });
-    };
+    }, 50);
 
-    cycle();
-  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, baselineFillLevel]);
+    setTimeout(() => {
+      clearInterval(fillInterval);
+      setNodeFillLevel(newTargetFillLevel);
+
+      // Pause for 1 second after fill completes
+      setTimeout(() => {
+        // Check if storage is full (>= 95%)
+        if (newTargetFillLevel >= 95) {
+          // Storage is full - show warning
+          setCheckpointPhase('idle');
+          setSsdActivity(0);
+
+          // Reset after showing full state for 2 seconds
+          setTimeout(() => {
+            console.log('Resetting storage to 0%');
+            setNodeFillLevel(0);
+            setBaselineFillLevel(0);
+          }, 2000);
+        } else {
+          // Not full yet - update baseline and go idle
+          setBaselineFillLevel(newTargetFillLevel);
+          setCheckpointPhase('idle');
+          setSsdActivity(0);
+        }
+      }, 1000);
+    }, fillDuration);
+  }, [checkpointTrigger, isRunning, config.checkpointSizeTB]);
 
   // Calculate storage needed - all flash
   const storageNodeCount = 8; // 8 Storage Nodes for active writes
