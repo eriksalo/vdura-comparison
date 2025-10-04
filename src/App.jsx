@@ -22,7 +22,7 @@ function App() {
     competitorCostPerTB: 0,
   });
 
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(true); // Auto-start simulation
 
   // Calculate checkpoint times based on configuration
   useEffect(() => {

@@ -55,9 +55,10 @@
 }
 
 .fill-indicator.node-fill {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.7) 50%, rgba(59, 130, 246, 0.9) 100%);
-  box-shadow: 0 -4px 20px rgba(59, 130, 246, 0.6);
-  border-top: 2px solid rgba(59, 130, 246, 0.8);
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.6) 0%, rgba(59, 130, 246, 0.85) 50%, rgba(59, 130, 246, 1) 100%);
+  box-shadow: 0 -8px 30px rgba(59, 130, 246, 0.8), inset 0 0 20px rgba(100, 170, 255, 0.5);
+  border-top: 3px solid rgba(130, 190, 255, 0.95);
+  border-radius: 0 0 6px 6px;
 }
 
 .storage-unit.extra {
