@@ -28,21 +28,22 @@ function VduraSystem({ config, metrics, isRunning }) {
       setSsdActivity(100);
       setHddActivity(0);
 
-      // Animate VPOD filling over 2 seconds
+      // Animate VPOD filling over 2 seconds to realistic fill level
       const fillDuration = 2000;
+      const targetFillLevel = (config.checkpointSizeTB / totalVpodCapacity) * 100; // 85/138.24 = ~61.5%
       const fillInterval = setInterval(() => {
         setVpodFillLevel(prev => {
-          if (prev >= 100) {
+          if (prev >= targetFillLevel) {
             clearInterval(fillInterval);
-            return 100;
+            return targetFillLevel;
           }
-          return prev + (100 / (fillDuration / 50));
+          return prev + (targetFillLevel / (fillDuration / 50));
         });
       }, 50);
 
       setTimeout(() => {
         clearInterval(fillInterval);
-        setVpodFillLevel(100);
+        setVpodFillLevel(targetFillLevel);
 
         // Pause for 1 second with VPODs full
         setTimeout(() => {
@@ -53,9 +54,10 @@ function VduraSystem({ config, metrics, isRunning }) {
 
           // Animate VPOD emptying and JBOD filling over 2 seconds
           const migrationDuration = 2000;
+          const jbodTargetFillLevel = (config.checkpointSizeTB / (jbodCount * jbodCapacityTB)) * 100; // 85/7020 = ~1.2%
           const emptyInterval = setInterval(() => {
-            setVpodFillLevel(prev => Math.max(0, prev - (100 / (migrationDuration / 50))));
-            setJbodFillLevel(prev => Math.min(100, prev + (100 / (migrationDuration / 50))));
+            setVpodFillLevel(prev => Math.max(0, prev - (targetFillLevel / (migrationDuration / 50))));
+            setJbodFillLevel(prev => Math.min(jbodTargetFillLevel, prev + (jbodTargetFillLevel / (migrationDuration / 50))));
           }, 50);
 
           setTimeout(() => {
@@ -85,6 +87,10 @@ function VduraSystem({ config, metrics, isRunning }) {
   const ssdCapacityTB = 3.84;
   const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB; // 46.08 TB per VPOD
   const totalVpodCapacity = vpodCount * vpodCapacityTB; // 138.24 TB total
+
+  // Calculate realistic fill level based on checkpoint size
+  const checkpointSizeTB = config.checkpointSizeTB; // 85 TB
+  const vpodFillPercentage = Math.min(100, (checkpointSizeTB / totalVpodCapacity) * 100); // 85/138.24 = ~61.5%
 
   const jbodCount = 3; // 3 JBODs minimum
   const hddsPerJbod = 78;

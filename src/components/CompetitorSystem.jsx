@@ -23,21 +23,22 @@ function CompetitorSystem({ config, metrics, isRunning }) {
       setCheckpointPhase('writing');
       setSsdActivity(100);
 
-      // Animate node filling over 4 seconds (2x slower than VDURA)
+      // Animate node filling over 4 seconds (2x slower than VDURA) to realistic fill level
       const fillDuration = 4000;
+      const targetFillLevel = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23%
       const fillInterval = setInterval(() => {
         setNodeFillLevel(prev => {
-          if (prev >= 100) {
+          if (prev >= targetFillLevel) {
             clearInterval(fillInterval);
-            return 100;
+            return targetFillLevel;
           }
-          return prev + (100 / (fillDuration / 50));
+          return prev + (targetFillLevel / (fillDuration / 50));
         });
       }, 50);
 
       setTimeout(() => {
         clearInterval(fillInterval);
-        setNodeFillLevel(100);
+        setNodeFillLevel(targetFillLevel);
 
         // Pause for 1 second with nodes full
         setTimeout(() => {
@@ -60,6 +61,10 @@ function CompetitorSystem({ config, metrics, isRunning }) {
   const ssdCapacityTB = 3.84;
   const nodeCapacityTB = ssdsPerNode * ssdCapacityTB; // 46.08 TB per node
   const totalNodeCapacity = storageNodeCount * nodeCapacityTB; // 368.64 TB total
+
+  // Calculate realistic fill level based on checkpoint size
+  const checkpointSizeTB = config.checkpointSizeTB; // 85 TB
+  const nodeFillPercentage = Math.min(100, (checkpointSizeTB / totalNodeCapacity) * 100); // 85/368.64 = ~23%
 
   const totalCheckpoints = 10; // Store same number of checkpoints
   const totalCapacityNeeded = config.checkpointSizeTB * totalCheckpoints;
