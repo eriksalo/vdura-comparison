@@ -23,13 +23,13 @@ function VduraSystem({ config, metrics, isRunning }) {
     const writeTime = metrics.vduraCheckpointTime * 1000 / config.simulationSpeed;
 
     const cycle = () => {
-      // Phase 1: Writing checkpoint to SSD (VPODs fill up)
+      // Phase 1: Writing checkpoint to SSD (VPODs fill up) - 4 seconds to match competitor
       setCheckpointPhase('writing');
       setSsdActivity(100);
       setHddActivity(0);
 
-      // Animate VPOD filling over 2 seconds to realistic fill level
-      const fillDuration = 2000;
+      // Animate VPOD filling over 4 seconds to realistic fill level (same timing as competitor)
+      const fillDuration = 4000;
       const targetFillLevel = (config.checkpointSizeTB / totalVpodCapacity) * 100; // 85/138.24 = ~61.5%
       const fillInterval = setInterval(() => {
         setVpodFillLevel(prev => {
@@ -47,22 +47,24 @@ function VduraSystem({ config, metrics, isRunning }) {
 
         // Pause for 1 second with VPODs full
         setTimeout(() => {
-          // Phase 2: Migrating old checkpoints to HDD (VPODs empty, JBODs fill)
+          // Phase 2: Migrating checkpoint to HDD (VPODs empty, JBODs accumulate)
           setCheckpointPhase('migrating');
           setSsdActivity(33); // 1GB/s out of 3GB/s capacity
           setHddActivity(100);
 
-          // Animate VPOD emptying and JBOD filling over 2 seconds
+          // Animate VPOD emptying and JBOD filling
           const migrationDuration = 2000;
-          const jbodTargetFillLevel = (config.checkpointSizeTB / (jbodCount * jbodCapacityTB)) * 100; // 85/7020 = ~1.2%
+          const jbodFillIncrement = (config.checkpointSizeTB / (jbodCount * jbodCapacityTB)) * 100; // 85/7020 = ~1.2% per checkpoint
+
+          // JBOD accumulates, VPOD empties completely
           const emptyInterval = setInterval(() => {
             setVpodFillLevel(prev => Math.max(0, prev - (targetFillLevel / (migrationDuration / 50))));
-            setJbodFillLevel(prev => Math.min(jbodTargetFillLevel, prev + (jbodTargetFillLevel / (migrationDuration / 50))));
+            setJbodFillLevel(prev => prev + (jbodFillIncrement / (migrationDuration / 50)));
           }, 50);
 
           setTimeout(() => {
             clearInterval(emptyInterval);
-            setVpodFillLevel(0);
+            setVpodFillLevel(0); // VPODs completely empty - ready for next checkpoint
 
             // Pause for 1 second before next cycle
             setTimeout(() => {
