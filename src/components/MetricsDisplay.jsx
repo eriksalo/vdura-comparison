@@ -5,6 +5,20 @@ function MetricsDisplay({ metrics, config }) {
     return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(num);
   };
 
+  const formatCurrency = (num) => {
+    if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `$${(num / 1e3).toFixed(1)}K`;
+    return `$${num.toFixed(0)}`;
+  };
+
+  const formatLargeNumber = (num) => {
+    if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+    if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
+    return num.toFixed(0);
+  };
+
   const formatTime = (seconds) => {
     if (seconds < 60) return `${seconds.toFixed(1)}s`;
     const minutes = Math.floor(seconds / 60);
@@ -44,7 +58,7 @@ function MetricsDisplay({ metrics, config }) {
       <div className="metrics-grid">
         <div className="metric-card highlight">
           <div className="metric-icon">⚡</div>
-          <div className="metric-value">{formatNumber(metrics.gpuHoursGained)}</div>
+          <div className="metric-value">{formatLargeNumber(metrics.gpuHoursGained)}</div>
           <div className="metric-label">GPU Hours Gained</div>
           <div className="metric-sublabel">VDURA Advantage</div>
         </div>
@@ -74,22 +88,22 @@ function MetricsDisplay({ metrics, config }) {
 
         <div className="metric-card cost">
           <div className="metric-icon">💰</div>
-          <div className="metric-value">${formatNumber(costSavings)}</div>
+          <div className="metric-value">{formatCurrency(costSavings)}</div>
           <div className="metric-label">Hardware Cost Savings</div>
           <div className="metric-sublabel">{costSavingsPercent}% Lower than All-Flash</div>
         </div>
 
         <div className="metric-card annual-savings">
           <div className="metric-icon">💵</div>
-          <div className="metric-value">${formatNumber(totalAnnualSavings)}</div>
+          <div className="metric-value">{formatCurrency(totalAnnualSavings)}</div>
           <div className="metric-label">Total Annual Savings</div>
           <div className="metric-sublabel">Hardware + Compute Time</div>
         </div>
 
         <div className="metric-card">
-          <div className="metric-value">${formatNumber(annualComputeSavings)}</div>
+          <div className="metric-value">{formatCurrency(annualComputeSavings)}</div>
           <div className="metric-label">Annual Compute Savings</div>
-          <div className="metric-sublabel">{formatNumber(annualGpuHoursGained)} GPU hrs/yr @ 30min intervals</div>
+          <div className="metric-sublabel">{formatLargeNumber(annualGpuHoursGained)} GPU hrs/yr @ 30min intervals</div>
         </div>
 
         <div className="metric-card productivity">
@@ -112,7 +126,7 @@ function MetricsDisplay({ metrics, config }) {
 
       <div className="summary-banner">
         <strong>Summary:</strong> VDURA delivers {((metrics.competitorCheckpointTime / metrics.vduraCheckpointTime) || 1).toFixed(1)}x faster checkpoints,
-        saving ${formatNumber(totalAnnualSavings)}/year (${formatNumber(costSavings)} in hardware + ${formatNumber(annualComputeSavings)} in compute time)
+        saving {formatCurrency(totalAnnualSavings)}/year ({formatCurrency(costSavings)} in hardware + {formatCurrency(annualComputeSavings)} in compute time)
         through Flash First architecture with HDD capacity expansion.
       </div>
     </div>
