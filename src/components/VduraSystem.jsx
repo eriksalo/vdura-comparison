@@ -46,14 +46,19 @@ function VduraSystem({ config, metrics, isRunning }) {
   }, [isRunning, config, metrics.vduraCheckpointTime]);
 
   // Calculate storage distribution
-  const ssdCount = 12;
-  const ssdCapacityTB = 3.84; // Typical enterprise SSD
-  const hddCapacityTB = 20; // Typical enterprise HDD
-  const hddCount = Math.ceil((config.checkpointSizeTB * 10) / hddCapacityTB); // Store ~10 checkpoints
+  const vpodCount = 1; // 1 VPOD = 12 SSDs
+  const ssdsPerVpod = 12;
+  const ssdCapacityTB = 3.84;
+  const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB; // 46.08 TB per VPOD
+
+  const jbodCount = 1; // 1 JBOD
+  const hddsPerJbod = 78;
+  const hddCapacityTB = 30; // 30TB HDDs
+  const jbodCapacityTB = hddsPerJbod * hddCapacityTB; // 2340 TB per JBOD
 
   return (
     <div className="system-container vdura-system">
-      <h2>VDURA Hybrid System</h2>
+      <h2>VDURA Flash First with HDD Capacity Expansion</h2>
       <div className="system-specs">
         <div className="spec">Write Speed: <strong>40 GB/s</strong></div>
         <div className="spec">Checkpoint Time: <strong>{metrics.vduraCheckpointTime.toFixed(1)}s</strong></div>
@@ -80,22 +85,23 @@ function VduraSystem({ config, metrics, isRunning }) {
           </div>
         )}
 
-        {/* SSD Tier */}
+        {/* VPOD Tier */}
         <div className="storage-tier">
-          <h3>Fast SSD Cache (Write Tier)</h3>
-          <div className="performance-badge">3 GB/s per SSD</div>
-          <div className="storage-grid">
-            {Array.from({ length: ssdCount }).map((_, i) => (
+          <h3>VPOD (Fast SSD Write Tier)</h3>
+          <div className="performance-badge">40 GB/s per VPOD</div>
+          <div className="storage-grid vpod-grid">
+            {Array.from({ length: vpodCount }).map((_, i) => (
               <div
-                key={`ssd-${i}`}
-                className={`storage-unit ssd ${ssdActivity > 0 ? 'active' : ''}`}
+                key={`vpod-${i}`}
+                className={`storage-unit vpod ${ssdActivity > 0 ? 'active' : ''}`}
                 style={{
                   animationDelay: `${i * 0.1}s`,
                   opacity: ssdActivity > 0 ? 1 : 0.6,
                 }}
               >
-                <div className="unit-label">SSD {i + 1}</div>
-                <div className="unit-capacity">{ssdCapacityTB}TB</div>
+                <div className="unit-label">VPOD {i + 1}</div>
+                <div className="unit-detail">{ssdsPerVpod} × {ssdCapacityTB}TB SSDs</div>
+                <div className="unit-capacity">{vpodCapacityTB.toFixed(1)} TB</div>
                 {ssdActivity > 0 && (
                   <div className="activity-indicator" style={{ width: `${ssdActivity}%` }} />
                 )}
@@ -103,7 +109,7 @@ function VduraSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Total: {(ssdCount * ssdCapacityTB).toFixed(1)} TB</div>
+            <div>Total Capacity: {vpodCapacityTB.toFixed(1)} TB</div>
             <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
               {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' :
                checkpointPhase === 'migrating' ? 'Migrating Data' : 'Ready'}
@@ -133,22 +139,23 @@ function VduraSystem({ config, metrics, isRunning }) {
           </div>
         </div>
 
-        {/* HDD Tier */}
+        {/* JBOD Tier */}
         <div className="storage-tier">
-          <h3>High-Capacity HDD (Archive Tier)</h3>
+          <h3>JBOD (Archive Tier)</h3>
           <div className="cost-badge">8x Lower Cost</div>
-          <div className="storage-grid hdd-grid">
-            {Array.from({ length: Math.min(hddCount, 12) }).map((_, i) => (
+          <div className="storage-grid jbod-grid">
+            {Array.from({ length: jbodCount }).map((_, i) => (
               <div
-                key={`hdd-${i}`}
-                className={`storage-unit hdd ${hddActivity > 0 ? 'active' : ''}`}
+                key={`jbod-${i}`}
+                className={`storage-unit jbod ${hddActivity > 0 ? 'active' : ''}`}
                 style={{
                   animationDelay: `${i * 0.15}s`,
                   opacity: hddActivity > 0 ? 1 : 0.6,
                 }}
               >
-                <div className="unit-label">HDD {i + 1}</div>
-                <div className="unit-capacity">{hddCapacityTB}TB</div>
+                <div className="unit-label">JBOD {i + 1}</div>
+                <div className="unit-detail">{hddsPerJbod} × {hddCapacityTB}TB HDDs</div>
+                <div className="unit-capacity">{jbodCapacityTB.toFixed(0)} TB</div>
                 {hddActivity > 0 && (
                   <div className="activity-indicator" style={{ width: `${hddActivity}%` }} />
                 )}
@@ -156,7 +163,7 @@ function VduraSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Total: {(hddCount * hddCapacityTB).toFixed(0)} TB</div>
+            <div>Total Capacity: {jbodCapacityTB.toFixed(0)} TB</div>
             <div className={`status ${checkpointPhase === 'migrating' ? 'active' : ''}`}>
               {checkpointPhase === 'migrating' ? '✓ Receiving Data' : 'Standby'}
             </div>

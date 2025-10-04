@@ -35,11 +35,14 @@ function CompetitorSystem({ config, metrics, isRunning }) {
   }, [isRunning, config, metrics.competitorCheckpointTime]);
 
   // Calculate storage needed - all flash
-  const ssdCount = 12;
+  const storageNodeCount = 1; // 1 Storage Node for active writes
+  const ssdsPerNode = 12;
   const ssdCapacityTB = 3.84;
+  const nodeCapacityTB = ssdsPerNode * ssdCapacityTB; // 46.08 TB per node
+
   const totalCheckpoints = 10; // Store same number of checkpoints
   const totalCapacityNeeded = config.checkpointSizeTB * totalCheckpoints;
-  const totalSsdsNeeded = Math.ceil(totalCapacityNeeded / ssdCapacityTB);
+  const additionalNodesNeeded = Math.ceil((totalCapacityNeeded - nodeCapacityTB) / nodeCapacityTB);
 
   return (
     <div className="system-container competitor-system">
@@ -70,22 +73,23 @@ function CompetitorSystem({ config, metrics, isRunning }) {
           </div>
         )}
 
-        {/* All SSD - Write Tier */}
+        {/* Storage Node - Write Tier */}
         <div className="storage-tier">
-          <h3>All-Flash Storage</h3>
-          <div className="performance-badge slower">1.67 GB/s per SSD</div>
-          <div className="storage-grid">
-            {Array.from({ length: ssdCount }).map((_, i) => (
+          <h3>Storage Node (All-Flash)</h3>
+          <div className="performance-badge slower">20 GB/s per Node</div>
+          <div className="storage-grid node-grid">
+            {Array.from({ length: storageNodeCount }).map((_, i) => (
               <div
-                key={`comp-ssd-${i}`}
-                className={`storage-unit ssd competitor ${ssdActivity > 0 ? 'active' : ''}`}
+                key={`node-${i}`}
+                className={`storage-unit node competitor ${ssdActivity > 0 ? 'active' : ''}`}
                 style={{
                   animationDelay: `${i * 0.1}s`,
                   opacity: ssdActivity > 0 ? 1 : 0.6,
                 }}
               >
-                <div className="unit-label">SSD {i + 1}</div>
-                <div className="unit-capacity">{ssdCapacityTB}TB</div>
+                <div className="unit-label">Storage Node {i + 1}</div>
+                <div className="unit-detail">{ssdsPerNode} × {ssdCapacityTB}TB SSDs</div>
+                <div className="unit-capacity">{nodeCapacityTB.toFixed(1)} TB</div>
                 {ssdActivity > 0 && (
                   <div className="activity-indicator slower" style={{ width: `${ssdActivity}%` }} />
                 )}
@@ -93,36 +97,37 @@ function CompetitorSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Active: {(ssdCount * ssdCapacityTB).toFixed(1)} TB</div>
+            <div>Active Capacity: {nodeCapacityTB.toFixed(1)} TB</div>
             <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
               {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
             </div>
           </div>
         </div>
 
-        {/* Additional SSDs needed for capacity */}
-        {totalSsdsNeeded > ssdCount && (
+        {/* Additional Storage Nodes needed for capacity */}
+        {additionalNodesNeeded > 0 && (
           <>
             <div className="capacity-note">
               <div className="note-icon">⚠️</div>
-              <div>Additional SSDs Required for Capacity</div>
+              <div>Additional All-Flash Nodes Required for Capacity</div>
             </div>
             <div className="storage-tier">
-              <h3>Additional Flash Storage</h3>
+              <h3>Additional Storage Nodes</h3>
               <div className="cost-badge warning">High Cost</div>
-              <div className="storage-grid">
-                {Array.from({ length: Math.min(totalSsdsNeeded - ssdCount, 12) }).map((_, i) => (
+              <div className="storage-grid node-grid">
+                {Array.from({ length: Math.min(additionalNodesNeeded, 3) }).map((_, i) => (
                   <div
-                    key={`comp-extra-ssd-${i}`}
-                    className="storage-unit ssd competitor extra"
+                    key={`node-extra-${i}`}
+                    className="storage-unit node competitor extra"
                   >
-                    <div className="unit-label">SSD {ssdCount + i + 1}</div>
-                    <div className="unit-capacity">{ssdCapacityTB}TB</div>
+                    <div className="unit-label">Storage Node {storageNodeCount + i + 1}</div>
+                    <div className="unit-detail">{ssdsPerNode} × {ssdCapacityTB}TB SSDs</div>
+                    <div className="unit-capacity">{nodeCapacityTB.toFixed(1)} TB</div>
                   </div>
                 ))}
               </div>
               <div className="tier-stats">
-                <div>Total: {(totalSsdsNeeded * ssdCapacityTB).toFixed(1)} TB</div>
+                <div>Total: {(totalCapacityNeeded).toFixed(1)} TB</div>
                 <div className="status">Archive Storage</div>
               </div>
             </div>
