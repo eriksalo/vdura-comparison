@@ -30,13 +30,16 @@ function CompetitorSystem({ config, metrics, isRunning }) {
       const checkpointFillIncrement = (checkpointSizeTB / totalNodeCapacity) * 100; // 85/368.64 = ~23% per checkpoint
       const newTargetFillLevel = Math.min(100, baselineFillLevel + checkpointFillIncrement);
 
+      // Start from baseline and animate to new target
+      setNodeFillLevel(baselineFillLevel);
+
       const fillInterval = setInterval(() => {
         setNodeFillLevel(prev => {
           if (prev >= newTargetFillLevel) {
             clearInterval(fillInterval);
             return newTargetFillLevel;
           }
-          return prev + (checkpointFillIncrement / (fillDuration / 50));
+          return Math.min(newTargetFillLevel, prev + (checkpointFillIncrement / (fillDuration / 50)));
         });
       }, 50);
 
