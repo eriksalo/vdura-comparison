@@ -9,7 +9,7 @@ function App() {
   const [config, setConfig] = useState({
     gpuCount: 1024,
     checkpointSizeTB: 85, // Scaled from 2.5TB for 12 GPUs -> ~85TB for 1024 GPUs
-    checkpointIntervalMin: 0.0833, // ~5 seconds (0.0833 min = 5 sec)
+    checkpointIntervalMin: 30, // Realistic checkpoint interval in minutes
     simulationSpeed: 1, // 1x, 2x, 5x, 10x
     ssdCapacityTB: 3.84, // SSD capacity in TB
     vduraCheckpointsInFlash: 3, // Number of checkpoints to keep in VDURA flash
@@ -58,8 +58,13 @@ function App() {
   useEffect(() => {
     if (!isRunning) return;
 
-    // Total cycle time: 4s write + 1s pause + 2s migration + 1s pause = 8s
-    const cycleTime = 8000;
+    // Total cycle time: 4s write + 1s pause + 2s migration + 1s pause = 8s base animation
+    const baseCycleTime = 8000;
+
+    // Speed up simulation to show realistic checkpoint intervals quickly
+    // With 30 min intervals, speedup = 30*60*1000 / 8000 = 225x
+    const autoSpeedupFactor = (config.checkpointIntervalMin * 60 * 1000) / baseCycleTime;
+    const effectiveCycleTime = baseCycleTime / (config.simulationSpeed * autoSpeedupFactor);
 
     const interval = setInterval(() => {
       setCheckpointTrigger(prev => prev + 1); // Trigger checkpoint in both systems
@@ -68,10 +73,10 @@ function App() {
         totalCheckpoints: prev.totalCheckpoints + 1,
         gpuHoursGained: prev.gpuHoursGained + prev.gpuHoursPerCheckpoint,
       }));
-    }, cycleTime);
+    }, effectiveCycleTime);
 
     return () => clearInterval(interval);
-  }, [isRunning, metrics.gpuHoursPerCheckpoint]);
+  }, [isRunning, metrics.gpuHoursPerCheckpoint, config.checkpointIntervalMin, config.simulationSpeed]);
 
   return (
     <div className="app">

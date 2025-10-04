@@ -36,7 +36,7 @@ function ConfigPanel({ config, setConfig, isRunning, setIsRunning }) {
           <input
             type="number"
             min="15"
-            max="120"
+            max="90"
             step="5"
             value={config.checkpointIntervalMin}
             onChange={(e) => setConfig({ ...config, checkpointIntervalMin: parseInt(e.target.value) })}
