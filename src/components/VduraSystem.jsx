@@ -110,24 +110,24 @@ function VduraSystem({ config, metrics, isRunning }) {
 
       <div className="storage-visualization">
         {/* GPU to SSD Data Flow */}
-        {checkpointPhase === 'writing' && (
-          <div className="gpu-flow">
-            <div className="gpu-source">
-              <div className="gpu-label">GPU Cluster Writing Checkpoint</div>
-              {Array.from({ length: 30 }).map((_, i) => (
-                <div
-                  key={`gpu-particle-${i}`}
-                  className="data-stream"
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    animationDelay: `${i * 0.1}s`,
-                    animationDuration: `${1 + Math.random() * 0.5}s`,
-                  }}
-                />
-              ))}
+        <div className="gpu-flow">
+          <div className="gpu-source">
+            <div className="gpu-label">
+              {checkpointPhase === 'writing' ? 'GPU Cluster Writing Checkpoint' : 'GPU Cluster Ready'}
             </div>
+            {checkpointPhase === 'writing' && Array.from({ length: 30 }).map((_, i) => (
+              <div
+                key={`gpu-particle-${i}`}
+                className="data-stream"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${i * 0.1}s`,
+                  animationDuration: `${1 + Math.random() * 0.5}s`,
+                }}
+              />
+            ))}
           </div>
-        )}
+        </div>
 
         {/* VPOD Tier */}
         <div className="storage-tier">
