@@ -69,7 +69,12 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>VDURA Storage Performance Comparison</h1>
+        <img
+          src="https://www.vdura.com/wp-content/uploads/2023/12/vdura-rgb-amber.png"
+          alt="VDURA Logo"
+          className="vdura-logo"
+        />
+        <h1>Storage Performance Comparison</h1>
         <p>GPU Checkpoint Optimization Analysis</p>
       </header>
 

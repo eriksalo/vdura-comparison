@@ -21,6 +21,12 @@ header {
   box-shadow: 0 8px 32px rgba(231, 159, 35, 0.15);
 }
 
+.vdura-logo {
+  height: 50px;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 4px 8px rgba(231, 159, 35, 0.3));
+}
+
 header h1 {
   font-size: 1.75rem;
   margin-bottom: 0.35rem;

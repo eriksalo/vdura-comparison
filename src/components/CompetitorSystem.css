@@ -1,18 +1,19 @@
 .competitor-system {
-  border-color: rgba(239, 68, 68, 0.4);
-  background: linear-gradient(135deg, rgba(30, 30, 46, 0.8) 0%, rgba(239, 68, 68, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, rgba(31, 31, 33, 0.8) 0%, rgba(59, 130, 246, 0.08) 100%);
 }
 
 .competitor-system h2 {
-  color: #fca5a5;
+  color: #93c5fd;
 }
 
 .competitor-system .spec strong {
-  color: #f87171;
+  color: #60a5fa;
 }
 
 .performance-badge.slower {
-  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
 }
 
 .cost-badge.warning {
@@ -20,8 +21,8 @@
 }
 
 .storage-unit.node {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border: 2px solid #fbbf24;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 2px solid #60a5fa;
   min-height: 60px;
 }
 
@@ -31,8 +32,8 @@
 }
 
 .storage-unit.competitor {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border: 2px solid #fbbf24;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 2px solid #60a5fa;
 }
 
 .storage-unit.competitor.active {
@@ -41,16 +42,20 @@
 
 @keyframes pulseSlow {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
   }
   50% {
-    box-shadow: 0 0 25px rgba(245, 158, 11, 0.6), 0 0 35px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.6), 0 0 35px rgba(59, 130, 246, 0.3);
   }
 }
 
 .storage-unit.competitor .activity-indicator.slower {
-  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+}
+
+.fill-indicator.node-fill {
+  background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0.5) 100%);
 }
 
 .storage-unit.extra {
@@ -63,12 +68,12 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   margin: 0.75rem 0;
-  color: #fbbf24;
+  color: #60a5fa;
   font-size: 0.8rem;
 }
 
@@ -82,15 +87,15 @@
   flex-wrap: wrap;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(239, 68, 68, 0.2);
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .limitation {
-  background: rgba(239, 68, 68, 0.2);
-  color: #fca5a5;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
   padding: 0.4rem 0.75rem;
   border-radius: 16px;
   font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.3);
 }

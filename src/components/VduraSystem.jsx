@@ -5,12 +5,16 @@ function VduraSystem({ config, metrics, isRunning }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [hddActivity, setHddActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle'); // idle, writing, migrating
+  const [vpodFillLevel, setVpodFillLevel] = useState(0); // 0-100% fill level
+  const [jbodFillLevel, setJbodFillLevel] = useState(0); // 0-100% fill level
 
   useEffect(() => {
     if (!isRunning) {
       setSsdActivity(0);
       setHddActivity(0);
       setCheckpointPhase('idle');
+      setVpodFillLevel(0);
+      setJbodFillLevel(0);
       return;
     }
 
@@ -19,23 +23,47 @@ function VduraSystem({ config, metrics, isRunning }) {
     const writeTime = metrics.vduraCheckpointTime * 1000 / config.simulationSpeed;
 
     const cycle = () => {
-      // Phase 1: Writing checkpoint to SSD
+      // Phase 1: Writing checkpoint to SSD (VPODs fill up)
       setCheckpointPhase('writing');
       setSsdActivity(100);
       setHddActivity(0);
 
+      // Animate VPOD filling
+      const fillInterval = setInterval(() => {
+        setVpodFillLevel(prev => {
+          if (prev >= 100) {
+            clearInterval(fillInterval);
+            return 100;
+          }
+          return prev + (100 / (writeTime / 50)); // Fill over writeTime
+        });
+      }, 50);
+
       setTimeout(() => {
-        // Phase 2: Migrating old checkpoints to HDD
+        clearInterval(fillInterval);
+        setVpodFillLevel(100);
+
+        // Phase 2: Migrating old checkpoints to HDD (VPODs empty, JBODs fill)
         setCheckpointPhase('migrating');
         setSsdActivity(33); // 1GB/s out of 3GB/s capacity
         setHddActivity(100);
 
+        // Animate VPOD emptying and JBOD filling
+        const migrationTime = writeTime * 2;
+        const emptyInterval = setInterval(() => {
+          setVpodFillLevel(prev => Math.max(0, prev - (100 / (migrationTime / 50))));
+          setJbodFillLevel(prev => Math.min(100, prev + (100 / (migrationTime / 50))));
+        }, 50);
+
         setTimeout(() => {
+          clearInterval(emptyInterval);
+          setVpodFillLevel(0);
+
           // Phase 3: Idle until next checkpoint
           setCheckpointPhase('idle');
           setSsdActivity(0);
           setHddActivity(0);
-        }, writeTime * 2); // Migration takes some time
+        }, migrationTime);
       }, writeTime);
     };
 
@@ -52,10 +80,11 @@ function VduraSystem({ config, metrics, isRunning }) {
   const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB; // 46.08 TB per VPOD
   const totalVpodCapacity = vpodCount * vpodCapacityTB; // 138.24 TB total
 
-  const jbodCount = 1; // 1 JBOD
+  const jbodCount = 3; // 3 JBODs minimum
   const hddsPerJbod = 78;
   const hddCapacityTB = 30; // 30TB HDDs
   const jbodCapacityTB = hddsPerJbod * hddCapacityTB; // 2340 TB per JBOD
+  const totalJbodCapacity = jbodCount * jbodCapacityTB; // 7020 TB total
 
   return (
     <div className="system-container vdura-system">
@@ -100,6 +129,7 @@ function VduraSystem({ config, metrics, isRunning }) {
                   opacity: ssdActivity > 0 ? 1 : 0.6,
                 }}
               >
+                <div className="fill-indicator" style={{ height: `${vpodFillLevel}%` }}></div>
                 <div className="unit-label">VPOD {i + 1}</div>
                 <div className="unit-detail">{ssdsPerVpod} × {ssdCapacityTB}TB SSDs</div>
                 <div className="unit-capacity">{vpodCapacityTB.toFixed(1)} TB</div>
@@ -154,6 +184,7 @@ function VduraSystem({ config, metrics, isRunning }) {
                   opacity: hddActivity > 0 ? 1 : 0.6,
                 }}
               >
+                <div className="fill-indicator jbod-fill" style={{ height: `${jbodFillLevel}%` }}></div>
                 <div className="unit-label">JBOD {i + 1}</div>
                 <div className="unit-detail">{hddsPerJbod} × {hddCapacityTB}TB HDDs</div>
                 <div className="unit-capacity">{jbodCapacityTB.toFixed(0)} TB</div>
@@ -164,7 +195,7 @@ function VduraSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Total Capacity: {jbodCapacityTB.toFixed(0)} TB</div>
+            <div>Total Capacity: {totalJbodCapacity.toFixed(0)} TB ({jbodCount} JBODs)</div>
             <div className={`status ${checkpointPhase === 'migrating' ? 'active' : ''}`}>
               {checkpointPhase === 'migrating' ? '✓ Receiving Data' : 'Standby'}
             </div>

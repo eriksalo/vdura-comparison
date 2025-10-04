@@ -4,11 +4,13 @@ import './CompetitorSystem.css';
 function CompetitorSystem({ config, metrics, isRunning }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
+  const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level
 
   useEffect(() => {
     if (!isRunning) {
       setSsdActivity(0);
       setCheckpointPhase('idle');
+      setNodeFillLevel(0);
       return;
     }
 
@@ -21,7 +23,21 @@ function CompetitorSystem({ config, metrics, isRunning }) {
       setCheckpointPhase('writing');
       setSsdActivity(100);
 
+      // Animate node filling
+      const fillInterval = setInterval(() => {
+        setNodeFillLevel(prev => {
+          if (prev >= 100) {
+            clearInterval(fillInterval);
+            return 100;
+          }
+          return prev + (100 / (writeTime / 50)); // Fill over writeTime
+        });
+      }, 50);
+
       setTimeout(() => {
+        clearInterval(fillInterval);
+        setNodeFillLevel(100);
+
         // Idle until next checkpoint
         setCheckpointPhase('idle');
         setSsdActivity(0);
@@ -88,6 +104,7 @@ function CompetitorSystem({ config, metrics, isRunning }) {
                   opacity: ssdActivity > 0 ? 1 : 0.6,
                 }}
               >
+                <div className="fill-indicator node-fill" style={{ height: `${nodeFillLevel}%` }}></div>
                 <div className="unit-label">Storage Node {i + 1}</div>
                 <div className="unit-detail">{ssdsPerNode} × {ssdCapacityTB}TB SSDs</div>
                 <div className="unit-capacity">{nodeCapacityTB.toFixed(1)} TB</div>
