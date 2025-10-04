@@ -6,6 +6,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
   const [checkpointPhase, setCheckpointPhase] = useState('idle');
   const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
   const [baselineFillLevel, setBaselineFillLevel] = useState(0); // Persistent fill level from previous checkpoints
+  const [displayFillLevel, setDisplayFillLevel] = useState(0); // For displaying in text (updates less frequently)
 
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
@@ -47,6 +48,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
     setTimeout(() => {
       clearInterval(fillInterval);
       setNodeFillLevel(newTargetFillLevel);
+      setDisplayFillLevel(newTargetFillLevel); // Update display text
 
       // Pause for 2 seconds after fill completes
       setTimeout(() => {
@@ -136,9 +138,9 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
             ))}
           </div>
           <div className="tier-stats">
-            <div>Capacity Used: {nodeFillLevel.toFixed(1)}% ({(nodeFillLevel * totalNodeCapacity / 100).toFixed(1)} TB / {totalNodeCapacity.toFixed(1)} TB)</div>
-            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''} ${nodeFillLevel >= 95 ? 'full' : ''}`}>
-              {nodeFillLevel >= 95 ? '⚠️ STORAGE FULL - Resetting' :
+            <div>Capacity Used: {displayFillLevel.toFixed(1)}% ({(displayFillLevel * totalNodeCapacity / 100).toFixed(1)} TB / {totalNodeCapacity.toFixed(1)} TB)</div>
+            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''} ${displayFillLevel >= 95 ? 'full' : ''}`}>
+              {displayFillLevel >= 95 ? '⚠️ STORAGE FULL' :
                checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
             </div>
           </div>
