@@ -27,7 +27,9 @@ function MetricsDisplay({ metrics, config }) {
   const costSavingsPercent = ((costSavings / competitorTotalCost) * 100).toFixed(1);
 
   // Calculate annual savings based on checkpoints per year
-  const checkpointsPerYear = (365 * 24 * 60) / config.checkpointIntervalMin;
+  // Use realistic 30-minute checkpoint interval for calculations (not the demo speed)
+  const realisticCheckpointIntervalMin = 30;
+  const checkpointsPerYear = (365 * 24 * 60) / realisticCheckpointIntervalMin;
   const annualGpuHoursGained = checkpointsPerYear * (metrics.gpuHoursPerCheckpoint || 0);
 
   // Assume GPU compute cost of $2/hour (typical cloud GPU pricing)
@@ -87,7 +89,7 @@ function MetricsDisplay({ metrics, config }) {
         <div className="metric-card">
           <div className="metric-value">${formatNumber(annualComputeSavings)}</div>
           <div className="metric-label">Annual Compute Savings</div>
-          <div className="metric-sublabel">{formatNumber(annualGpuHoursGained)} GPU hours/year</div>
+          <div className="metric-sublabel">{formatNumber(annualGpuHoursGained)} GPU hrs/yr @ 30min intervals</div>
         </div>
 
         <div className="metric-card productivity">
