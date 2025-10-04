@@ -30,11 +30,11 @@ function MetricsDisplay({ metrics, config }) {
   const ssdCostPerTB = 150; // $150/TB for enterprise SSD
   const hddCostPerTB = 18;  // $18/TB for enterprise HDD
 
-  const vduraSsdCapacity = 12 * 3.84; // 12 SSDs × 3.84TB per VPOD
+  const vduraSsdCapacity = 12 * config.ssdCapacityTB; // 12 SSDs × capacity per VPOD
   const vduraHddCapacity = 78 * 30; // 78 HDDs × 30TB per JBOD = 2340TB
   const vduraTotalCost = (vduraSsdCapacity * ssdCostPerTB) + (vduraHddCapacity * hddCostPerTB);
 
-  const competitorTotalCapacity = Math.max(12 * 3.84, config.checkpointSizeTB * 10);
+  const competitorTotalCapacity = Math.max(12 * config.ssdCapacityTB, config.checkpointSizeTB * 10);
   const competitorTotalCost = competitorTotalCapacity * ssdCostPerTB;
 
   const costSavings = competitorTotalCost - vduraTotalCost;

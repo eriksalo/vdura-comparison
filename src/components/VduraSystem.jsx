@@ -16,7 +16,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
     // Calculate storage distribution
     const vpodCount = 3;
     const ssdsPerVpod = 12;
-    const ssdCapacityTB = 3.84;
+    const ssdCapacityTB = config.ssdCapacityTB;
     const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB;
     const totalVpodCapacity = vpodCount * vpodCapacityTB;
 
@@ -86,9 +86,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
   // Calculate storage distribution
   const vpodCount = 3; // 3 VPODs, each with 12 SSDs
   const ssdsPerVpod = 12;
-  const ssdCapacityTB = 3.84;
-  const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB; // 46.08 TB per VPOD
-  const totalVpodCapacity = vpodCount * vpodCapacityTB; // 138.24 TB total
+  const ssdCapacityTB = config.ssdCapacityTB;
+  const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB;
+  const totalVpodCapacity = vpodCount * vpodCapacityTB;
 
   // Calculate realistic fill level based on checkpoint size
   const checkpointSizeTB = config.checkpointSizeTB; // 85 TB

@@ -45,6 +45,21 @@ function ConfigPanel({ config, setConfig, isRunning, setIsRunning }) {
         </div>
 
         <div className="config-item">
+          <label>SSD Capacity (TB)</label>
+          <select
+            value={config.ssdCapacityTB}
+            onChange={(e) => setConfig({ ...config, ssdCapacityTB: parseFloat(e.target.value) })}
+            disabled={isRunning}
+          >
+            <option value="3.84">3.84 TB</option>
+            <option value="7.68">7.68 TB</option>
+            <option value="15.36">15.36 TB</option>
+            <option value="30.72">30.72 TB</option>
+            <option value="61.44">61.44 TB</option>
+          </select>
+        </div>
+
+        <div className="config-item">
           <label>Simulation Speed</label>
           <select
             value={config.simulationSpeed}

@@ -15,7 +15,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
     // Calculate storage needed - all flash
     const storageNodeCount = 8;
     const ssdsPerNode = 12;
-    const ssdCapacityTB = 3.84;
+    const ssdCapacityTB = config.ssdCapacityTB;
     const nodeCapacityTB = ssdsPerNode * ssdCapacityTB;
     const totalNodeCapacity = storageNodeCount * nodeCapacityTB;
     const checkpointSizeTB = config.checkpointSizeTB;
@@ -75,9 +75,9 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger }) {
   // Calculate storage needed - all flash
   const storageNodeCount = 8; // 8 Storage Nodes for active writes
   const ssdsPerNode = 12;
-  const ssdCapacityTB = 3.84;
-  const nodeCapacityTB = ssdsPerNode * ssdCapacityTB; // 46.08 TB per node
-  const totalNodeCapacity = storageNodeCount * nodeCapacityTB; // 368.64 TB total
+  const ssdCapacityTB = config.ssdCapacityTB;
+  const nodeCapacityTB = ssdsPerNode * ssdCapacityTB;
+  const totalNodeCapacity = storageNodeCount * nodeCapacityTB;
 
   // Calculate realistic fill level based on checkpoint size
   const checkpointSizeTB = config.checkpointSizeTB; // 85 TB
