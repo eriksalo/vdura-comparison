@@ -16,8 +16,8 @@ function MetricsDisplay({ metrics, config }) {
   const ssdCostPerTB = 150; // $150/TB for enterprise SSD
   const hddCostPerTB = 18;  // $18/TB for enterprise HDD
 
-  const vduraSsdCapacity = 12 * 3.84; // 12 SSDs × 3.84TB
-  const vduraHddCapacity = Math.ceil((config.checkpointSizeTB * 10) / 20) * 20; // HDDs for 10 checkpoints
+  const vduraSsdCapacity = 12 * 3.84; // 12 SSDs × 3.84TB per VPOD
+  const vduraHddCapacity = 78 * 30; // 78 HDDs × 30TB per JBOD = 2340TB
   const vduraTotalCost = (vduraSsdCapacity * ssdCostPerTB) + (vduraHddCapacity * hddCostPerTB);
 
   const competitorTotalCapacity = Math.max(12 * 3.84, config.checkpointSizeTB * 10);
@@ -25,6 +25,15 @@ function MetricsDisplay({ metrics, config }) {
 
   const costSavings = competitorTotalCost - vduraTotalCost;
   const costSavingsPercent = ((costSavings / competitorTotalCost) * 100).toFixed(1);
+
+  // Calculate annual savings based on checkpoints per year
+  const checkpointsPerYear = (365 * 24 * 60) / config.checkpointIntervalMin;
+  const annualGpuHoursGained = checkpointsPerYear * (metrics.gpuHoursPerCheckpoint || 0);
+
+  // Assume GPU compute cost of $2/hour (typical cloud GPU pricing)
+  const gpuCostPerHour = 2;
+  const annualComputeSavings = annualGpuHoursGained * gpuCostPerHour;
+  const totalAnnualSavings = costSavings + annualComputeSavings;
 
   return (
     <div className="metrics-display">
@@ -64,18 +73,21 @@ function MetricsDisplay({ metrics, config }) {
         <div className="metric-card cost">
           <div className="metric-icon">💰</div>
           <div className="metric-value">${formatNumber(costSavings)}</div>
-          <div className="metric-label">Cost Savings</div>
+          <div className="metric-label">Hardware Cost Savings</div>
           <div className="metric-sublabel">{costSavingsPercent}% Lower than All-Flash</div>
         </div>
 
+        <div className="metric-card annual-savings">
+          <div className="metric-icon">💵</div>
+          <div className="metric-value">${formatNumber(totalAnnualSavings)}</div>
+          <div className="metric-label">Total Annual Savings</div>
+          <div className="metric-sublabel">Hardware + Compute Time</div>
+        </div>
+
         <div className="metric-card">
-          <div className="metric-value">
-            ${formatNumber(vduraTotalCost)}
-            <span className="vs-text">vs</span>
-            ${formatNumber(competitorTotalCost)}
-          </div>
-          <div className="metric-label">Total Storage Cost</div>
-          <div className="metric-sublabel">VDURA vs Competitor</div>
+          <div className="metric-value">${formatNumber(annualComputeSavings)}</div>
+          <div className="metric-label">Annual Compute Savings</div>
+          <div className="metric-sublabel">{formatNumber(annualGpuHoursGained)} GPU hours/year</div>
         </div>
 
         <div className="metric-card productivity">
@@ -97,8 +109,9 @@ function MetricsDisplay({ metrics, config }) {
       </div>
 
       <div className="summary-banner">
-        <strong>Summary:</strong> VDURA delivers {((metrics.competitorCheckpointTime / metrics.vduraCheckpointTime) || 1).toFixed(1)}x faster checkpoints
-        while saving ${formatNumber(costSavings)} ({costSavingsPercent}%) in storage costs through intelligent SSD+HDD tiering.
+        <strong>Summary:</strong> VDURA delivers {((metrics.competitorCheckpointTime / metrics.vduraCheckpointTime) || 1).toFixed(1)}x faster checkpoints,
+        saving ${formatNumber(totalAnnualSavings)}/year (${formatNumber(costSavings)} in hardware + ${formatNumber(annualComputeSavings)} in compute time)
+        through Flash First architecture with HDD capacity expansion.
       </div>
     </div>
   );

@@ -46,10 +46,11 @@ function VduraSystem({ config, metrics, isRunning }) {
   }, [isRunning, config, metrics.vduraCheckpointTime]);
 
   // Calculate storage distribution
-  const vpodCount = 1; // 1 VPOD = 12 SSDs
+  const vpodCount = 3; // 3 VPODs, each with 12 SSDs
   const ssdsPerVpod = 12;
   const ssdCapacityTB = 3.84;
   const vpodCapacityTB = ssdsPerVpod * ssdCapacityTB; // 46.08 TB per VPOD
+  const totalVpodCapacity = vpodCount * vpodCapacityTB; // 138.24 TB total
 
   const jbodCount = 1; // 1 JBOD
   const hddsPerJbod = 78;
@@ -109,7 +110,7 @@ function VduraSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Total Capacity: {vpodCapacityTB.toFixed(1)} TB</div>
+            <div>Total Capacity: {totalVpodCapacity.toFixed(1)} TB ({vpodCount} VPODs)</div>
             <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
               {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' :
                checkpointPhase === 'migrating' ? 'Migrating Data' : 'Ready'}

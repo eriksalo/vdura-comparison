@@ -7,8 +7,8 @@ import MetricsDisplay from './components/MetricsDisplay';
 
 function App() {
   const [config, setConfig] = useState({
-    gpuCount: 12,
-    checkpointSizeTB: 2.5,
+    gpuCount: 1024,
+    checkpointSizeTB: 85, // Scaled from 2.5TB for 12 GPUs -> ~85TB for 1024 GPUs
     checkpointIntervalMin: 30,
     simulationSpeed: 1, // 1x, 2x, 5x, 10x
   });

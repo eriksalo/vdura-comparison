@@ -7,12 +7,12 @@
 }
 
 .vdura-system {
-  border-color: rgba(16, 185, 129, 0.4);
-  background: linear-gradient(135deg, rgba(30, 30, 46, 0.8) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border-color: rgba(231, 159, 35, 0.4);
+  background: linear-gradient(135deg, rgba(31, 31, 33, 0.8) 0%, rgba(231, 159, 35, 0.08) 100%);
 }
 
 .system-container h2 {
-  color: #a5b4fc;
+  color: var(--vdura-amber);
   margin-bottom: 0.75rem;
   font-size: 1.4rem;
 }
@@ -30,7 +30,7 @@
 }
 
 .spec strong {
-  color: #10b981;
+  color: var(--vdura-amber);
   font-size: 0.95rem;
   margin-left: 0.5rem;
 }
@@ -56,12 +56,12 @@
 }
 
 .performance-badge {
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-  color: white;
+  background: linear-gradient(90deg, var(--vdura-amber) 0%, #D88D1A 100%);
+  color: var(--vdura-black);
   padding: 0.25rem 0.6rem;
   border-radius: 16px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .cost-badge {
@@ -80,7 +80,16 @@
   margin: 0.75rem 0;
 }
 
-.vpod-grid, .jbod-grid, .node-grid {
+.vpod-grid {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  max-width: 100%;
+}
+
+.storage-unit.vpod {
+  min-height: 70px;
+}
+
+.jbod-grid, .node-grid {
   grid-template-columns: 1fr;
   max-width: 400px;
 }
@@ -99,13 +108,13 @@
 }
 
 .storage-unit.vpod {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-  border: 2px solid #818cf8;
+  background: linear-gradient(135deg, var(--vdura-amber) 0%, #D88D1A 100%);
+  border: 2px solid #F5B94E;
 }
 
 .storage-unit.jbod {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  border: 2px solid #a78bfa;
+  background: linear-gradient(135deg, #5A5A5C 0%, #3A3A3C 100%);
+  border: 2px solid #7A7A7C;
 }
 
 .storage-unit.ssd {
@@ -158,9 +167,9 @@
   bottom: 0;
   left: 0;
   height: 4px;
-  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+  background: linear-gradient(90deg, var(--vdura-amber) 0%, #F5B94E 100%);
   transition: width 0.5s ease;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+  box-shadow: 0 0 10px rgba(231, 159, 35, 0.8);
 }
 
 .tier-stats {
@@ -182,8 +191,8 @@
 }
 
 .status.active {
-  background: rgba(16, 185, 129, 0.3);
-  color: #10b981;
+  background: rgba(231, 159, 35, 0.25);
+  color: var(--vdura-amber);
   animation: statusPulse 2s ease-in-out infinite;
 }
 
@@ -229,10 +238,10 @@
   top: 0;
   width: 3px;
   height: 20px;
-  background: linear-gradient(180deg, #10b981 0%, #34d399 50%, transparent 100%);
+  background: linear-gradient(180deg, var(--vdura-amber) 0%, #F5B94E 50%, transparent 100%);
   border-radius: 2px;
   animation: streamDown 1.5s ease-in infinite;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+  box-shadow: 0 0 8px rgba(231, 159, 35, 0.8);
 }
 
 .data-stream.slower {
@@ -282,10 +291,10 @@
   top: 0;
   width: 4px;
   height: 12px;
-  background: linear-gradient(180deg, #10b981 0%, #34d399 50%, transparent 100%);
+  background: linear-gradient(180deg, var(--vdura-amber) 0%, #F5B94E 50%, transparent 100%);
   border-radius: 2px;
   animation: particleFlow 2s ease-in infinite;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+  box-shadow: 0 0 10px rgba(231, 159, 35, 0.8);
 }
 
 @keyframes particleFlow {
@@ -312,9 +321,9 @@
   position: relative;
   z-index: 5;
   font-size: 2rem;
-  color: #10b981;
+  color: var(--vdura-amber);
   animation: flowDown 1.5s ease-in-out infinite;
-  text-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+  text-shadow: 0 0 20px rgba(231, 159, 35, 0.6);
 }
 
 @keyframes flowDown {
@@ -327,7 +336,7 @@
 }
 
 .flow-label {
-  color: #10b981;
+  color: var(--vdura-amber);
   font-size: 0.8rem;
   font-weight: 600;
   margin-top: 0.25rem;
@@ -340,15 +349,15 @@
   flex-wrap: wrap;
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  border-top: 1px solid rgba(231, 159, 35, 0.2);
 }
 
 .advantage {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
+  background: rgba(231, 159, 35, 0.15);
+  color: var(--vdura-amber);
   padding: 0.4rem 0.75rem;
   border-radius: 16px;
   font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+  border: 1px solid rgba(231, 159, 35, 0.3);
 }

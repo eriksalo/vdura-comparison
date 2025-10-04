@@ -35,14 +35,15 @@ function CompetitorSystem({ config, metrics, isRunning }) {
   }, [isRunning, config, metrics.competitorCheckpointTime]);
 
   // Calculate storage needed - all flash
-  const storageNodeCount = 1; // 1 Storage Node for active writes
+  const storageNodeCount = 8; // 8 Storage Nodes for active writes
   const ssdsPerNode = 12;
   const ssdCapacityTB = 3.84;
   const nodeCapacityTB = ssdsPerNode * ssdCapacityTB; // 46.08 TB per node
+  const totalNodeCapacity = storageNodeCount * nodeCapacityTB; // 368.64 TB total
 
   const totalCheckpoints = 10; // Store same number of checkpoints
   const totalCapacityNeeded = config.checkpointSizeTB * totalCheckpoints;
-  const additionalNodesNeeded = Math.ceil((totalCapacityNeeded - nodeCapacityTB) / nodeCapacityTB);
+  const additionalNodesNeeded = Math.max(0, Math.ceil((totalCapacityNeeded - totalNodeCapacity) / nodeCapacityTB));
 
   return (
     <div className="system-container competitor-system">
@@ -97,7 +98,7 @@ function CompetitorSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Active Capacity: {nodeCapacityTB.toFixed(1)} TB</div>
+            <div>Total Capacity: {totalNodeCapacity.toFixed(1)} TB ({storageNodeCount} Nodes)</div>
             <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
               {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
             </div>

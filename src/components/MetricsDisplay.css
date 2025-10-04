@@ -1,53 +1,62 @@
 .metrics-display {
-  background: rgba(30, 30, 46, 0.8);
+  background: rgba(31, 31, 33, 0.8);
   backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  margin-top: 3rem;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  border: 1px solid rgba(231, 159, 35, 0.2);
 }
 
 .metrics-display h2 {
-  color: #a5b4fc;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
+  color: var(--vdura-amber);
+  margin-bottom: 1.25rem;
+  font-size: 1.4rem;
   text-align: center;
 }
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .metric-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(231, 159, 35, 0.08) 0%, rgba(31, 31, 33, 0.8) 100%);
+  border: 1px solid rgba(231, 159, 35, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
   text-align: center;
   transition: all 0.3s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 12px 24px rgba(231, 159, 35, 0.2);
+  border-color: rgba(231, 159, 35, 0.4);
 }
 
 .metric-card.highlight {
+  background: linear-gradient(135deg, rgba(231, 159, 35, 0.2) 0%, rgba(217, 141, 26, 0.2) 100%);
+  border-color: rgba(231, 159, 35, 0.4);
+}
+
+.metric-card.highlight:hover {
+  box-shadow: 0 12px 24px rgba(231, 159, 35, 0.3);
+}
+
+.metric-card.annual-savings {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%);
   border-color: rgba(16, 185, 129, 0.4);
 }
 
-.metric-card.highlight:hover {
+.metric-card.annual-savings:hover {
   box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
 }
 
 .metric-card.cost {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%);
-  border-color: rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+  border-color: rgba(245, 158, 11, 0.35);
 }
 
 .metric-card.cost:hover {
@@ -55,8 +64,8 @@
 }
 
 .metric-card.productivity {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-  border-color: rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+  border-color: rgba(139, 92, 246, 0.35);
 }
 
 .metric-card.productivity:hover {
@@ -81,17 +90,23 @@
 }
 
 .metric-card.highlight .metric-value {
+  color: var(--vdura-amber);
+  text-shadow: 0 0 20px rgba(231, 159, 35, 0.5);
+  animation: valueGlow 2s ease-in-out infinite;
+}
+
+.metric-card.annual-savings .metric-value {
   color: #10b981;
   text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
-  animation: valueGlow 2s ease-in-out infinite;
+  font-size: 2.2rem;
 }
 
 @keyframes valueGlow {
   0%, 100% {
-    text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    text-shadow: 0 0 20px rgba(231, 159, 35, 0.5);
   }
   50% {
-    text-shadow: 0 0 30px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4);
+    text-shadow: 0 0 30px rgba(231, 159, 35, 0.8), 0 0 40px rgba(231, 159, 35, 0.4);
   }
 }
 
@@ -116,19 +131,20 @@
 }
 
 .summary-banner {
-  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-  border-radius: 12px;
-  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(231, 159, 35, 0.15) 0%, rgba(31, 31, 33, 0.8) 100%);
+  border: 1px solid rgba(231, 159, 35, 0.3);
+  border-radius: 10px;
+  padding: 1.25rem;
   text-align: center;
-  color: #e0e7ff;
-  font-size: 1.1rem;
+  color: var(--vdura-light);
+  font-size: 1rem;
   line-height: 1.6;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(231, 159, 35, 0.2);
 }
 
 .summary-banner strong {
-  color: #ffffff;
-  font-weight: 600;
+  color: var(--vdura-amber);
+  font-weight: 700;
 }
 
 @media (max-width: 768px) {
