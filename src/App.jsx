@@ -9,7 +9,7 @@ function App() {
   const [config, setConfig] = useState({
     gpuCount: 1024,
     checkpointSizeTB: 85, // Scaled from 2.5TB for 12 GPUs -> ~85TB for 1024 GPUs
-    checkpointIntervalMin: 30,
+    checkpointIntervalMin: 0.0833, // ~5 seconds (0.0833 min = 5 sec)
     simulationSpeed: 1, // 1x, 2x, 5x, 10x
   });
 

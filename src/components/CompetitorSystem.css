@@ -55,7 +55,9 @@
 }
 
 .fill-indicator.node-fill {
-  background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.3) 50%, rgba(59, 130, 246, 0.5) 100%);
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.7) 50%, rgba(59, 130, 246, 0.9) 100%);
+  box-shadow: 0 -4px 20px rgba(59, 130, 246, 0.6);
+  border-top: 2px solid rgba(59, 130, 246, 0.8);
 }
 
 .storage-unit.extra {
