@@ -43,14 +43,31 @@ function CompetitorSystem({ config, metrics, isRunning }) {
       setTimeout(() => {
         clearInterval(fillInterval);
         setNodeFillLevel(newTargetFillLevel);
-        setBaselineFillLevel(newTargetFillLevel); // Update baseline for next checkpoint
 
-        // Pause for 1 second with nodes full
-        setTimeout(() => {
-          // Idle until next checkpoint
-          setCheckpointPhase('idle');
-          setSsdActivity(0);
-        }, 1000);
+        // Check if storage is full (>= 95%)
+        if (newTargetFillLevel >= 95) {
+          // Storage is full - pause and reset
+          setTimeout(() => {
+            setCheckpointPhase('idle');
+            setSsdActivity(0);
+
+            // Reset after showing full state for 2 seconds
+            setTimeout(() => {
+              setNodeFillLevel(0);
+              setBaselineFillLevel(0);
+            }, 2000);
+          }, 1000);
+        } else {
+          // Not full yet - update baseline and continue
+          setBaselineFillLevel(newTargetFillLevel);
+
+          // Pause for 1 second with nodes full
+          setTimeout(() => {
+            // Idle until next checkpoint
+            setCheckpointPhase('idle');
+            setSsdActivity(0);
+          }, 1000);
+        }
       }, fillDuration);
     };
 
@@ -129,9 +146,10 @@ function CompetitorSystem({ config, metrics, isRunning }) {
             ))}
           </div>
           <div className="tier-stats">
-            <div>Total Capacity: {totalNodeCapacity.toFixed(1)} TB ({storageNodeCount} Nodes)</div>
-            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
-              {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
+            <div>Capacity Used: {nodeFillLevel.toFixed(1)}% ({(nodeFillLevel * totalNodeCapacity / 100).toFixed(1)} TB / {totalNodeCapacity.toFixed(1)} TB)</div>
+            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''} ${nodeFillLevel >= 95 ? 'full' : ''}`}>
+              {nodeFillLevel >= 95 ? '⚠️ STORAGE FULL - Resetting' :
+               checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
             </div>
           </div>
         </div>
