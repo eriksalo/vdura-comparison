@@ -7,6 +7,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
   const [nodeFillLevel, setNodeFillLevel] = useState(0); // 0-100% fill level - accumulates over time
   const [baselineFillLevel, setBaselineFillLevel] = useState(0); // Persistent fill level from previous checkpoints
   const [displayFillLevel, setDisplayFillLevel] = useState(0); // For displaying in text (updates less frequently)
+  const [displayStatus, setDisplayStatus] = useState('Ready'); // For status text (updates less frequently)
 
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
@@ -24,6 +25,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
     // Writing checkpoint to all-flash
     setCheckpointPhase('writing');
     setSsdActivity(100);
+    setDisplayStatus('✓ Writing Checkpoint');
 
     // Animate node filling over 5 seconds (2x slower than VDURA) to realistic fill level
     const fillDuration = 5000;
@@ -57,6 +59,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
           // Storage is full - pause simulation
           setCheckpointPhase('idle');
           setSsdActivity(0);
+          setDisplayStatus('⚠️ STORAGE FULL');
           console.log('Competitor storage full - pausing simulation');
           setIsRunning(false);
         } else {
@@ -64,6 +67,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
           setBaselineFillLevel(newTargetFillLevel);
           setCheckpointPhase('idle');
           setSsdActivity(0);
+          setDisplayStatus('Ready');
         }
       }, 2000);
     }, fillDuration);
@@ -139,9 +143,8 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
           </div>
           <div className="tier-stats">
             <div>Capacity Used: {displayFillLevel.toFixed(1)}% ({(displayFillLevel * totalNodeCapacity / 100).toFixed(1)} TB / {totalNodeCapacity.toFixed(1)} TB)</div>
-            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''} ${displayFillLevel >= 95 ? 'full' : ''}`}>
-              {displayFillLevel >= 95 ? '⚠️ STORAGE FULL' :
-               checkpointPhase === 'writing' ? '✓ Writing Checkpoint' : 'Ready'}
+            <div className={`status ${displayStatus.includes('Writing') ? 'active' : ''} ${displayFillLevel >= 95 ? 'full' : ''}`}>
+              {displayStatus}
             </div>
           </div>
         </div>

@@ -8,6 +8,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
   const [vpodFillLevel, setVpodFillLevel] = useState(0); // 0-100% fill level - accumulates
   const [jbodFillLevel, setJbodFillLevel] = useState(0); // 0-100% fill level
   const [checkpointsInVpod, setCheckpointsInVpod] = useState(0); // Track number of checkpoints stored
+  const [gpuLabel, setGpuLabel] = useState('GPU Cluster Ready'); // GPU status label
+  const [vpodStatus, setVpodStatus] = useState('Ready'); // VPOD status label
+  const [jbodStatus, setJbodStatus] = useState('Standby'); // JBOD status label
 
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
@@ -31,6 +34,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
       setCheckpointPhase('writing');
       setSsdActivity(100);
       setHddActivity(0);
+      setGpuLabel('GPU Cluster Writing Checkpoint');
+      setVpodStatus('✓ Writing Checkpoint');
+      setJbodStatus('Standby');
 
       // Animate VPOD filling over 5 seconds - adds one checkpoint
       const fillDuration = 5000;
@@ -64,6 +70,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
             setCheckpointPhase('migrating');
             setSsdActivity(33); // 1GB/s out of 3GB/s capacity
             setHddActivity(100);
+            setGpuLabel('GPU Cluster Ready');
+            setVpodStatus('Migrating Data');
+            setJbodStatus('✓ Receiving Data');
 
             // Animate VPOD emptying and JBOD filling
             const migrationDuration = 3000;
@@ -84,6 +93,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
                 setCheckpointPhase('idle');
                 setSsdActivity(0);
                 setHddActivity(0);
+                setGpuLabel('GPU Cluster Ready');
+                setVpodStatus('Ready');
+                setJbodStatus('Standby');
               }, 2000);
             }, migrationDuration);
           } else {
@@ -91,6 +103,9 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
             setCheckpointPhase('idle');
             setSsdActivity(0);
             setHddActivity(0);
+            setGpuLabel('GPU Cluster Ready');
+            setVpodStatus('Ready');
+            setJbodStatus('Standby');
           }
         }, 2000);
       }, fillDuration);
@@ -129,7 +144,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
         <div className="gpu-flow">
           <div className="gpu-source">
             <div className="gpu-label">
-              {checkpointPhase === 'writing' ? 'GPU Cluster Writing Checkpoint' : 'GPU Cluster Ready'}
+              {gpuLabel}
             </div>
             {checkpointPhase === 'writing' && Array.from({ length: 30 }).map((_, i) => (
               <div
@@ -171,9 +186,8 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
           </div>
           <div className="tier-stats">
             <div>Total Capacity: {totalVpodCapacity.toFixed(1)} TB ({vpodCount} VPODs)</div>
-            <div className={`status ${checkpointPhase === 'writing' ? 'active' : ''}`}>
-              {checkpointPhase === 'writing' ? '✓ Writing Checkpoint' :
-               checkpointPhase === 'migrating' ? 'Migrating Data' : 'Ready'}
+            <div className={`status ${vpodStatus.includes('Writing') ? 'active' : ''}`}>
+              {vpodStatus}
             </div>
           </div>
         </div>
@@ -226,8 +240,8 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger }) {
           </div>
           <div className="tier-stats">
             <div>Total Capacity: {totalJbodCapacity.toFixed(0)} TB ({jbodCount} JBODs)</div>
-            <div className={`status ${checkpointPhase === 'migrating' ? 'active' : ''}`}>
-              {checkpointPhase === 'migrating' ? '✓ Receiving Data' : 'Standby'}
+            <div className={`status ${jbodStatus.includes('Receiving') ? 'active' : ''}`}>
+              {jbodStatus}
             </div>
           </div>
         </div>
