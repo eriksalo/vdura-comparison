@@ -50,16 +50,18 @@ function App() {
 
   // Calculate checkpoint times based on configuration
   useEffect(() => {
-    // VDURA: 40 GB/s per node (12 SSDs)
-    const vduraNodeBandwidth = 40; // GB/s
+    // VDURA: 40 GB/s per node (12 SSDs per node)
+    const vduraNodeBandwidth = 40; // GB/s per node
+    const vduraTotalBandwidth = vduraNodeBandwidth * config.storageNodes;
 
-    // Competitor: 20 GB/s per node (12 SSDs)
-    const competitorNodeBandwidth = 20; // GB/s
+    // Competitor: 20 GB/s per node (12 SSDs per node)
+    const competitorNodeBandwidth = 20; // GB/s per node
+    const competitorTotalBandwidth = competitorNodeBandwidth * config.storageNodes;
 
     // Calculate write time in seconds
     const checkpointSizeGB = config.checkpointSizeTB * 1024;
-    const vduraTime = checkpointSizeGB / vduraNodeBandwidth;
-    const competitorTime = checkpointSizeGB / competitorNodeBandwidth;
+    const vduraTime = checkpointSizeGB / vduraTotalBandwidth;
+    const competitorTime = checkpointSizeGB / competitorTotalBandwidth;
 
     // Time saved per checkpoint (in hours)
     const timeSavedHours = (competitorTime - vduraTime) / 3600;
@@ -149,6 +151,7 @@ function App() {
             isRunning={isRunning}
             checkpointTrigger={checkpointTrigger}
             writeDuration={writeDurations.vdura}
+            competitorWriteDuration={writeDurations.competitor}
           />
         </div>
 

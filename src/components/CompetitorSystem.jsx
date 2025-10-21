@@ -8,6 +8,17 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
   const [displayFillLevel, setDisplayFillLevel] = useState(0); // For displaying in text (updates less frequently)
   const [displayStatus, setDisplayStatus] = useState('Ready'); // For status text (updates less frequently)
 
+  // Reset all storage when simulation is reset (checkpointTrigger becomes 0)
+  useEffect(() => {
+    if (checkpointTrigger === 0) {
+      setNodeFillLevel(0);
+      setDisplayFillLevel(0);
+      setCheckpointPhase('idle');
+      setSsdActivity(0);
+      setDisplayStatus('Ready');
+    }
+  }, [checkpointTrigger]);
+
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
       return;
@@ -40,37 +51,35 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
       setDisplayFillLevel(prev => {
         const newLevel = Math.min(100, prev + checkpointFillIncrement);
 
-        // Pause for 15 seconds after fill completes (maximum visibility)
-        setTimeout(() => {
-          // Check if storage is full (>= 95%)
-          if (newLevel >= 95) {
-            // Storage is full - restart simulation
+        // Immediately transition to training phase after write completes
+        // Check if storage is full (>= 95%)
+        if (newLevel >= 95) {
+          // Storage is full - restart simulation after 45 second pause
+          setCheckpointPhase('idle');
+          setSsdActivity(0);
+          setDisplayStatus('⚠️ STORAGE FULL - Restarting...');
+          console.log('Competitor storage full - restarting simulation');
+
+          // Wait 3 seconds to show the "STORAGE FULL" message, then restart
+          setTimeout(() => {
+            setIsRunning(false);
+            resetSimulation();
+            setTimeout(() => {
+              setIsRunning(true);
+            }, 100);
+          }, 3000);
+        } else {
+          // Not full yet - show training phase (competitor does nothing during training)
+          setCheckpointPhase('training');
+          setSsdActivity(0);
+          setDisplayStatus('Training (No Data Movement)');
+
+          // Training phase lasts 45 seconds (15s pause + 30s training to match VDURA)
+          setTimeout(() => {
             setCheckpointPhase('idle');
-            setSsdActivity(0);
-            setDisplayStatus('⚠️ STORAGE FULL - Restarting...');
-            console.log('Competitor storage full - restarting simulation');
-
-            // Wait 3 seconds to show the "STORAGE FULL" message, then restart
-            setTimeout(() => {
-              setIsRunning(false);
-              resetSimulation();
-              setTimeout(() => {
-                setIsRunning(true);
-              }, 100);
-            }, 3000);
-          } else {
-            // Not full yet - show training phase (competitor does nothing during training)
-            setCheckpointPhase('training');
-            setSsdActivity(0);
-            setDisplayStatus('Training (No Data Movement)');
-
-            // Training phase lasts 30 seconds (matches VDURA migration)
-            setTimeout(() => {
-              setCheckpointPhase('idle');
-              setDisplayStatus('Ready');
-            }, 30000);
-          }
-        }, 15000);
+            setDisplayStatus('Ready');
+          }, 45000);
+        }
 
         return newLevel;
       });
@@ -102,7 +111,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
     <div className="system-container competitor-system">
       <h2>All-Flash Competitor</h2>
       <div className="system-specs">
-        <div className="spec">Write Speed: <strong>20 GB/s</strong></div>
+        <div className="spec">Total Write Speed: <strong>{(20 * storageNodes)} GB/s</strong></div>
         <div className="spec">Checkpoint Time: <strong>{metrics.competitorCheckpointTime.toFixed(1)}s</strong></div>
       </div>
 
@@ -125,7 +134,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
         {/* Storage Node - Write Tier */}
         <div className="storage-tier">
           <h3>All-Flash Storage</h3>
-          <div className="performance-badge slower">20 GB/s Write Speed</div>
+          <div className="performance-badge slower">{(20 * storageNodes)} GB/s Total Write Speed</div>
 
           {/* Phase Banner */}
           {checkpointPhase !== 'idle' && (
@@ -142,9 +151,9 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
                 )}
                 {checkpointPhase === 'training' && (
                   <>
-                    <div className="banner-icon">⏸️</div>
+                    <div className="banner-icon">▶️</div>
                     <div className="banner-text">
-                      <div className="banner-title">TRAINING PHASE</div>
+                      <div className="banner-title">MODEL RUNNING</div>
                       <div className="banner-subtitle">No data movement (all data remains in flash)</div>
                     </div>
                   </>
@@ -156,7 +165,7 @@ function CompetitorSystem({ config, metrics, isRunning, checkpointTrigger, setIs
           <div className="single-container-wrapper">
             <div className="unit-label unit-label-top">
               <div>SSD Layer</div>
-              <div>{storageNodes} Nodes</div>
+              <div>{storageNodes} Nodes × 20 GB/s = {(storageNodes * 20)} GB/s</div>
               <div>{(totalNodeCapacity / 1000).toFixed(2)} PB</div>
               <div>{nodeFillLevel.toFixed(1)}% Full</div>
             </div>

@@ -7,7 +7,11 @@
       "Bash(node:*)",
       "Bash(npm install:*)",
       "Bash(npx playwright test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git log:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nRedesign storage visualization with 3D cylinders and enhanced features\n\nMajor improvements to the VDURA vs Competitor storage comparison:\n\n**Visual Redesign:**\n- Implement 3D cylindrical storage layers with translucent glass effects\n- Add proportional sizing: cylinder width scales with node count, height with capacity\n- Position SSD layer labels above cylinders showing nodes, capacity (PB), and % full\n- Add real-time fill percentage display for all storage layers\n- Move HDD cylinder directly below SSD in VDURA for clear vertical flow\n\n**Configuration Enhancements:**\n- Split configuration into three sections: Checkpoint, VDURA Storage, Competitor Storage\n- Add configurable storage nodes (5-20, each with 12 SSDs)\n- Add independent SSD capacity controls for each system\n- Add HDD pool size configuration (3-50 PB) for VDURA\n- Add checkpoints-in-flash setting for VDURA\n- Implement auto-pause/restart on all config changes\n\n**Simulation Improvements:**\n- Fix fill/empty logic: SSD accumulates checkpoints, VDURA migrates to HDD\n- Add individual phase banners above each system''s SSD layer\n- Add inline animated arrows during VDURA data migration\n- Auto-restart simulation when competitor storage fills up\n- Sync checkpoint writes based on actual write speeds\n\n**Testing:**\n- Add Playwright testing infrastructure\n- Create label placement validation test\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

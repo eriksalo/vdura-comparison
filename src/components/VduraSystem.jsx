@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './VduraSystem.css';
 
-function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDuration }) {
+function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDuration, competitorWriteDuration }) {
   const [ssdActivity, setSsdActivity] = useState(0);
   const [hddActivity, setHddActivity] = useState(0);
   const [checkpointPhase, setCheckpointPhase] = useState('idle'); // idle, writing, migrating
@@ -11,6 +11,21 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
   const [gpuLabel, setGpuLabel] = useState('GPU Cluster Ready'); // GPU status label
   const [vpodStatus, setVpodStatus] = useState('Ready'); // VPOD status label
   const [jbodStatus, setJbodStatus] = useState('Standby'); // JBOD status label
+
+  // Reset all storage when simulation is reset (checkpointTrigger becomes 0)
+  useEffect(() => {
+    if (checkpointTrigger === 0) {
+      setVpodFillLevel(0);
+      setJbodFillLevel(0);
+      setCheckpointsInVpod(0);
+      setCheckpointPhase('idle');
+      setSsdActivity(0);
+      setHddActivity(0);
+      setGpuLabel('GPU Cluster Ready');
+      setVpodStatus('Ready');
+      setJbodStatus('Standby');
+    }
+  }, [checkpointTrigger]);
 
   useEffect(() => {
     if (!isRunning || checkpointTrigger === 0) {
@@ -48,49 +63,75 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
       const fillDuration = writeDuration;
 
       setTimeout(() => {
+        // Checkpoint write is complete - update checkpoint count
         setCheckpointsInVpod(prev => prev + 1);
 
-        // Phase 2: Training phase - migrate data to HDD (longer pause to see the banner)
+        // Wait for competitor to finish writing before transitioning to model run
+        // This ensures banners are synchronized
+        const waitForCompetitor = Math.max(0, competitorWriteDuration - fillDuration);
+
         setTimeout(() => {
-          setCheckpointPhase('training');
-          setSsdActivity(33); // Background migration
-          setHddActivity(100);
-          setGpuLabel('Training (GPUs Active)');
-          setVpodStatus('Auto-tiering Data');
-          setJbodStatus('✓ Receiving Data');
+          // Model Run Phase - check if we need to migrate
+          const currentCheckpointCount = checkpointsInVpod + 1; // Already incremented above
+          const shouldMigrate = currentCheckpointCount > config.vduraCheckpointsInFlash;
 
-          // Migrate checkpoint to JBOD and remove from VPOD
-          const migrationDuration = 30000; // 30 seconds for maximum visibility
-          const jbodFillIncrement = (config.checkpointSizeTB / totalJbodCapacity) * 100;
+          if (shouldMigrate) {
+            // Migrate oldest checkpoint to HDD during model run
+            setCheckpointPhase('training');
+            setSsdActivity(33); // Background migration
+            setHddActivity(100);
+            setGpuLabel('Model Running');
+            setVpodStatus('Auto-tiering Data');
+            setJbodStatus('✓ Receiving Data');
 
-          // Remove data from SSD and add to HDD
-          setVpodFillLevel(prev => {
-            const newLevel = Math.max(0, prev - checkpointFillIncrement);
-            console.log(`VDURA: Migrating to HDD. SSD: ${prev.toFixed(1)}% -> ${newLevel.toFixed(1)}%`);
-            return newLevel;
-          });
+            // Migrate checkpoint to JBOD and remove from VPOD
+            const jbodFillIncrement = (config.checkpointSizeTB / totalJbodCapacity) * 100;
 
-          setJbodFillLevel(prev => {
-            const newLevel = prev + jbodFillIncrement;
-            console.log(`VDURA: Migrating to HDD. HDD: ${prev.toFixed(1)}% -> ${newLevel.toFixed(1)}%`);
-            return newLevel;
-          });
+            // Remove one checkpoint worth of data from SSD and add to HDD
+            setVpodFillLevel(prev => {
+              const newLevel = Math.max(0, prev - checkpointFillIncrement);
+              console.log(`VDURA: Migrating to HDD during model run. SSD: ${prev.toFixed(1)}% -> ${newLevel.toFixed(1)}%`);
+              return newLevel;
+            });
 
-          setTimeout(() => {
-            // Return to idle after training/migration
-            setCheckpointPhase('idle');
+            setJbodFillLevel(prev => {
+              const newLevel = prev + jbodFillIncrement;
+              console.log(`VDURA: Migrating to HDD. HDD: ${prev.toFixed(1)}% -> ${newLevel.toFixed(1)}%`);
+              return newLevel;
+            });
+
+            setCheckpointsInVpod(config.vduraCheckpointsInFlash); // Keep count at max
+
+            // Return to idle after migration + training (45 seconds)
+            setTimeout(() => {
+              setCheckpointPhase('idle');
+              setSsdActivity(0);
+              setHddActivity(0);
+              setGpuLabel('GPU Cluster Ready');
+              setVpodStatus('Ready');
+              setJbodStatus('Standby');
+            }, 45000);
+          } else {
+            // Just model running, no migration yet (haven't reached checkpoint limit)
+            setCheckpointPhase('training');
             setSsdActivity(0);
             setHddActivity(0);
-            setGpuLabel('GPU Cluster Ready');
+            setGpuLabel('Model Running');
             setVpodStatus('Ready');
             setJbodStatus('Standby');
-          }, migrationDuration);
-        }, 15000); // 15 seconds pause for maximum visibility
+
+            // Return to ready after training period (45 seconds)
+            setTimeout(() => {
+              setCheckpointPhase('idle');
+              setGpuLabel('GPU Cluster Ready');
+            }, 45000);
+          }
+        }, waitForCompetitor);
       }, fillDuration);
     };
 
     cycle();
-  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, config.storageNodes, config.vduraSsdCapacityTB, config.vduraHddPoolSizePB, writeDuration]);
+  }, [checkpointTrigger, isRunning, config.checkpointSizeTB, config.storageNodes, config.vduraSsdCapacityTB, config.vduraHddPoolSizePB, config.vduraCheckpointsInFlash, writeDuration, competitorWriteDuration, checkpointsInVpod]);
 
   // Calculate storage distribution based on checkpoints to keep in flash
   const ssdsPerNode = 12;
@@ -112,16 +153,54 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
   const ssdWidth = 150 + (totalSSDs * 2.5); // Base 150px + 2.5px per SSD
   const ssdHeight = 80 + (ssdCapacityTB * 3); // Base 80px + 3px per TB
 
-  // JBOD dimensions scale only with HDD pool size (independent of SSD/node configuration)
-  // Base dimensions scale with the configured HDD pool size in PB
-  const jbodWidth = 200 + (hddPoolSizePB * 15); // Base 200px + 15px per PB
-  const jbodHeight = 120 + (hddPoolSizePB * 8); // Base 120px + 8px per PB
+  // JBOD dimensions: make VOLUME proportional to capacity
+  // Cylinders are 3D objects, so viewers perceive volume, not area
+  // For cylinder: Volume = π × r² × h
+  // We want: (jbodVolume / ssdVolume) = (totalJbodCapacity / totalVpodCapacity)
+
+  const capacityRatio = totalJbodCapacity / totalVpodCapacity;
+
+  // SSD cylinder volume
+  const ssdRadius = ssdWidth / 2;
+  const ssdVolume = Math.PI * ssdRadius * ssdRadius * ssdHeight;
+
+  // Target HDD volume based on capacity ratio
+  const targetJbodVolume = ssdVolume * capacityRatio;
+
+  // For proportional 3D scaling with aesthetic (taller and narrower)
+  // Choose height first (taller), then calculate width to maintain volume ratio
+  const scaleFactor = Math.cbrt(capacityRatio);
+
+  // Make it 30% taller than uniform scaling would suggest
+  const jbodHeight = ssdHeight * scaleFactor * 1.3;
+
+  // Calculate width needed to achieve target volume with this height
+  // V = π × r² × h, so r² = V / (π × h), and width = 2r
+  const targetRadiusSquared = targetJbodVolume / (Math.PI * jbodHeight);
+  const jbodWidth = 2 * Math.sqrt(targetRadiusSquared);
+
+  // Debug: verify volumes are proportional
+  const jbodRadius = jbodWidth / 2;
+  const actualJbodVolume = Math.PI * jbodRadius * jbodRadius * jbodHeight;
+  const volumeRatio = actualJbodVolume / ssdVolume;
+
+  console.log('VDURA Volume Check:', {
+    ssdCapacityTB: totalVpodCapacity.toFixed(0),
+    hddCapacityTB: totalJbodCapacity.toFixed(0),
+    capacityRatio: capacityRatio.toFixed(2),
+    ssdDimensions: { width: ssdWidth.toFixed(0), height: ssdHeight.toFixed(0) },
+    hddDimensions: { width: jbodWidth.toFixed(0), height: jbodHeight.toFixed(0) },
+    ssdVolume: ssdVolume.toFixed(0),
+    hddVolume: actualJbodVolume.toFixed(0),
+    volumeRatio: volumeRatio.toFixed(2),
+    shouldBe: capacityRatio.toFixed(2)
+  });
 
   return (
     <div className="system-container vdura-system">
       <h2>VDURA Flash First with HDD Capacity Expansion</h2>
       <div className="system-specs">
-        <div className="spec">Write Speed: <strong>40 GB/s</strong></div>
+        <div className="spec">Total Write Speed: <strong>{(40 * storageNodes)} GB/s</strong></div>
         <div className="spec">Checkpoint Time: <strong>{metrics.vduraCheckpointTime.toFixed(1)}s</strong></div>
       </div>
 
@@ -144,11 +223,11 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
         {/* VPOD Tier */}
         <div className="storage-tier">
           <h3>VPOD Flash Tier</h3>
-          <div className="performance-badge">40 GB/s Write Speed</div>
+          <div className="performance-badge">{(40 * storageNodes)} GB/s Total Write Speed</div>
 
           {/* Phase Banner */}
-          {checkpointPhase !== 'idle' && (
-            <div className={`phase-banner ${checkpointPhase}`}>
+          {(checkpointPhase !== 'idle' || gpuLabel === 'Model Running') && (
+            <div className={`phase-banner ${checkpointPhase === 'idle' ? 'training' : checkpointPhase}`}>
               <div className="banner-content">
                 {checkpointPhase === 'writing' && (
                   <>
@@ -159,12 +238,16 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
                     </div>
                   </>
                 )}
-                {checkpointPhase === 'training' && (
+                {(checkpointPhase === 'training' || (checkpointPhase === 'idle' && gpuLabel === 'Model Running')) && (
                   <>
-                    <div className="banner-icon">🔄</div>
+                    <div className="banner-icon">{checkpointPhase === 'training' ? '🔄' : '▶️'}</div>
                     <div className="banner-text">
-                      <div className="banner-title">TRAINING PHASE</div>
-                      <div className="banner-subtitle">Auto-tiering data to HDD (GPUs continue training)</div>
+                      <div className="banner-title">MODEL RUNNING</div>
+                      <div className="banner-subtitle">
+                        {checkpointPhase === 'training'
+                          ? 'Auto-tiering data to HDD (GPUs continue training)'
+                          : 'GPUs processing model training'}
+                      </div>
                     </div>
                   </>
                 )}
@@ -175,7 +258,7 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
           <div className="single-container-wrapper">
             <div className="unit-label unit-label-top">
               <div>SSD Layer</div>
-              <div>{storageNodes} Nodes</div>
+              <div>{storageNodes} Nodes × 40 GB/s = {(storageNodes * 40)} GB/s</div>
               <div>{(totalVpodCapacity / 1000).toFixed(2)} PB</div>
               <div>{vpodFillLevel.toFixed(1)}% Full</div>
             </div>
@@ -198,17 +281,23 @@ function VduraSystem({ config, metrics, isRunning, checkpointTrigger, writeDurat
             </div>
           </div>
 
-          {/* Data Flow Animation - Inline */}
-          {checkpointPhase === 'training' && (
-            <div className="data-flow-inline">
-              <div className="migration-arrows-inline">
-                <div className="migration-arrow-inline">↓</div>
-                <div className="migration-arrow-inline">↓</div>
-                <div className="migration-arrow-inline">↓</div>
-              </div>
-              <div className="flow-label-inline">Auto-tiering to HDD</div>
+          {/* Data Flow Animation - Inline - Always visible, animates when migrating */}
+          <div className={`data-flow-inline ${checkpointPhase === 'training' && hddActivity > 0 ? 'active-migration' : ''}`}>
+            <div className="migration-arrows-inline">
+              <div className="migration-arrow-inline">⬇</div>
+              <div className="migration-arrow-inline">⬇</div>
+              <div className="migration-arrow-inline">⬇</div>
+              <div className="migration-arrow-inline">⬇</div>
+              <div className="migration-arrow-inline">⬇</div>
             </div>
-          )}
+            {checkpointPhase === 'training' && hddActivity > 0 && (
+              <div className="flow-label-inline">
+                <div className="flow-icon">🔄</div>
+                <div>Auto-tiering to HDD</div>
+                <div className="flow-subtext">Data Migration in Progress</div>
+              </div>
+            )}
+          </div>
 
           {/* JBOD Tier - Directly Below SSD */}
           <h3 style={{ marginTop: '1rem' }}>JBOD Archive Tier</h3>

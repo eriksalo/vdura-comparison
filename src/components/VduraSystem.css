@@ -669,54 +669,167 @@
 /* SSD to HDD Migration Arrows */
 /* Inline Data Flow - positioned between SSD and HDD in same tier */
 .data-flow-inline {
+  position: relative;
   text-align: center;
-  margin: 1.5rem 0;
-  padding: 0.5rem 0;
+  margin: 2rem 0;
+  padding: 1.5rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  animation: fadeIn 0.5s ease;
+  background: linear-gradient(180deg,
+    rgba(231, 159, 35, 0.02) 0%,
+    rgba(231, 159, 35, 0.05) 50%,
+    rgba(231, 159, 35, 0.02) 100%);
+  border-left: 3px solid rgba(231, 159, 35, 0.15);
+  border-right: 3px solid rgba(231, 159, 35, 0.15);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.data-flow-inline.active-migration {
+  background: linear-gradient(180deg,
+    rgba(231, 159, 35, 0.05) 0%,
+    rgba(231, 159, 35, 0.15) 50%,
+    rgba(231, 159, 35, 0.05) 100%);
+  border-left: 3px solid rgba(231, 159, 35, 0.3);
+  border-right: 3px solid rgba(231, 159, 35, 0.3);
+  animation: pulseBackground 2s ease-in-out infinite;
+}
+
+.migration-pulse {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 100%;
+  background: radial-gradient(ellipse at center,
+    rgba(231, 159, 35, 0.2) 0%,
+    rgba(231, 159, 35, 0) 70%);
+  animation: pulsate 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .migration-arrows-inline {
   display: flex;
-  gap: 20px;
+  gap: 15px;
   justify-content: center;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  z-index: 2;
 }
 
 .migration-arrow-inline {
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: var(--vdura-amber);
-  filter: drop-shadow(0 0 8px rgba(231, 159, 35, 0.6));
-  animation: arrowBounce 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(231, 159, 35, 0.8));
+  font-weight: bold;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+/* Only animate when migration is active */
+.data-flow-inline.active-migration .migration-arrow-inline {
+  animation: arrowFlow 1s ease-in-out infinite;
+  opacity: 1;
+}
+
+.migration-arrow-inline:nth-child(1) {
+  animation-delay: 0s;
 }
 
 .migration-arrow-inline:nth-child(2) {
-  animation-delay: 0.3s;
+  animation-delay: 0.2s;
 }
 
 .migration-arrow-inline:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.migration-arrow-inline:nth-child(4) {
   animation-delay: 0.6s;
 }
 
-.flow-label-inline {
-  font-size: 0.85rem;
-  color: var(--vdura-amber);
-  font-weight: 600;
-  text-shadow: 0 0 10px rgba(231, 159, 35, 0.5);
+.migration-arrow-inline:nth-child(5) {
+  animation-delay: 0.8s;
 }
 
-@keyframes arrowBounce {
-  0%, 100% {
-    transform: translateY(0);
-    opacity: 0.7;
+.flow-label-inline {
+  font-size: 1rem;
+  color: var(--vdura-amber);
+  font-weight: 700;
+  text-shadow:
+    0 0 15px rgba(231, 159, 35, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.flow-icon {
+  font-size: 1.5rem;
+  animation: spin 2s linear infinite;
+  margin-bottom: 0.25rem;
+}
+
+.flow-subtext {
+  font-size: 0.75rem;
+  color: rgba(231, 159, 35, 0.9);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+@keyframes arrowFlow {
+  0% {
+    transform: translateY(-10px);
+    opacity: 0.3;
   }
   50% {
-    transform: translateY(8px);
+    transform: translateY(10px);
     opacity: 1;
+  }
+  100% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+@keyframes pulseBackground {
+  0%, 100% {
+    background: linear-gradient(180deg,
+      rgba(231, 159, 35, 0.05) 0%,
+      rgba(231, 159, 35, 0.15) 50%,
+      rgba(231, 159, 35, 0.05) 100%);
+  }
+  50% {
+    background: linear-gradient(180deg,
+      rgba(231, 159, 35, 0.1) 0%,
+      rgba(231, 159, 35, 0.25) 50%,
+      rgba(231, 159, 35, 0.1) 100%);
+  }
+}
+
+@keyframes pulsate {
+  0%, 100% {
+    opacity: 0.3;
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1.1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
