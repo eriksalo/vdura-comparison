@@ -21,8 +21,11 @@
 }
 
 .storage-unit.node {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: 2px solid #60a5fa;
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.15) 0%,
+    rgba(37, 99, 235, 0.1) 100%);
+  border: 3px solid #60a5fa;
+  backdrop-filter: blur(5px);
   min-height: 60px;
 }
 
@@ -31,9 +34,56 @@
   max-width: 100%;
 }
 
-.storage-unit.competitor {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border: 2px solid #60a5fa;
+/* Competitor Cylinder - Taller Blue SSD */
+.storage-unit.single-tank.competitor {
+  width: var(--cylinder-width, 200px);
+  height: var(--cylinder-height, 200px);
+}
+
+/* Competitor Blue SSD Cylinder */
+.storage-unit.competitor::before {
+  background: radial-gradient(ellipse at 40% 45%,
+    rgba(147, 197, 253, 1) 0%,
+    rgba(96, 165, 250, 1) 30%,
+    rgba(59, 130, 246, 0.95) 60%,
+    rgba(37, 99, 235, 1) 100%);
+  border: 3px solid rgba(96, 165, 250, 0.9);
+  box-shadow:
+    0 -3px 15px rgba(59, 130, 246, 0.8),
+    inset -10px -5px 20px rgba(30, 58, 138, 0.4),
+    inset 10px 5px 20px rgba(191, 219, 254, 0.5);
+}
+
+.storage-unit.competitor::after {
+  background: radial-gradient(ellipse at 40% 40%,
+    rgba(59, 130, 246, 0.6) 0%,
+    rgba(37, 99, 235, 0.8) 40%,
+    rgba(29, 78, 216, 0.95) 70%,
+    rgba(30, 58, 138, 1) 100%);
+  border: 3px solid rgba(30, 58, 138, 0.8);
+  box-shadow:
+    inset -15px 0 25px rgba(30, 58, 138, 0.6),
+    inset 15px 0 15px rgba(37, 99, 235, 0.3);
+}
+
+/* Competitor Cylinder Body - Translucent glass effect */
+.storage-unit.competitor .cylinder-body {
+  background: linear-gradient(90deg,
+    rgba(29, 78, 216, 0.25) 0%,
+    rgba(30, 58, 138, 0.3) 3%,
+    rgba(37, 99, 235, 0.35) 8%,
+    rgba(59, 130, 246, 0.4) 25%,
+    rgba(96, 165, 250, 0.45) 50%,
+    rgba(59, 130, 246, 0.4) 75%,
+    rgba(37, 99, 235, 0.35) 92%,
+    rgba(30, 58, 138, 0.3) 97%,
+    rgba(29, 78, 216, 0.25) 100%);
+  border-left: 3px solid rgba(29, 78, 216, 0.6);
+  border-right: 3px solid rgba(29, 78, 216, 0.6);
+  box-shadow:
+    inset -30px 0 50px rgba(29, 78, 216, 0.3),
+    inset 30px 0 50px rgba(29, 78, 216, 0.3),
+    inset 0 0 80px rgba(96, 165, 250, 0.15);
 }
 
 .storage-unit.competitor.active {
@@ -55,10 +105,54 @@
 }
 
 .fill-indicator.node-fill {
-  background: linear-gradient(180deg, rgba(100, 170, 255, 0.8) 0%, rgba(59, 130, 246, 0.95) 50%, rgba(30, 100, 220, 1) 100%);
-  box-shadow: 0 -8px 30px rgba(59, 130, 246, 0.9), inset 0 0 30px rgba(150, 200, 255, 0.6);
-  border-top: 4px solid rgba(150, 200, 255, 1);
-  border-radius: 0 0 6px 6px;
+  background: linear-gradient(90deg,
+    rgba(30, 58, 138, 0.85) 0%,
+    rgba(29, 78, 216, 0.9) 3%,
+    rgba(37, 99, 235, 0.92) 8%,
+    rgba(59, 130, 246, 0.95) 25%,
+    rgba(96, 165, 250, 0.98) 50%,
+    rgba(59, 130, 246, 0.95) 75%,
+    rgba(37, 99, 235, 0.92) 92%,
+    rgba(29, 78, 216, 0.9) 97%,
+    rgba(30, 58, 138, 0.85) 100%);
+  border-left: 3px solid rgba(29, 78, 216, 0.8);
+  border-right: 3px solid rgba(29, 78, 216, 0.8);
+  box-shadow:
+    inset -20px 0 35px rgba(30, 64, 175, 0.6),
+    inset 20px 0 35px rgba(30, 64, 175, 0.6),
+    0 0 40px rgba(96, 165, 250, 0.6),
+    0 -10px 30px rgba(96, 165, 250, 0.4);
+}
+
+/* Competitor liquid surface - top of fill */
+.fill-indicator.node-fill::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -5%;
+  right: -5%;
+  width: 110%;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center,
+    rgba(147, 197, 253, 0.95) 0%,
+    rgba(96, 165, 250, 1) 50%,
+    rgba(59, 130, 246, 0.98) 100%);
+  border: 3px solid rgba(96, 165, 250, 0.8);
+  box-shadow:
+    0 -5px 20px rgba(96, 165, 250, 0.6),
+    inset 0 5px 15px rgba(191, 219, 254, 0.5);
+  animation: liquidSurfaceCompetitor 4s ease-in-out infinite;
+  z-index: 7;
+}
+
+@keyframes liquidSurfaceCompetitor {
+  0%, 100% {
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    transform: translateY(-2px) scaleY(0.95);
+  }
 }
 
 .storage-unit.extra {
@@ -119,4 +213,85 @@
     opacity: 1;
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
   }
+}
+
+/* Competitor Checkpoint Arrow */
+.checkpoint-arrow {
+  position: relative;
+  width: 120px;
+  height: 60px;
+  margin: 0.5rem auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.checkpoint-arrow-shape {
+  width: 0;
+  height: 0;
+  border-left: 60px solid transparent;
+  border-right: 60px solid transparent;
+  border-top: 50px solid rgba(96, 165, 250, 0.9);
+  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.6));
+  position: relative;
+}
+
+.checkpoint-arrow-shape::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: -60px;
+  width: 120px;
+  height: 30px;
+  background: rgba(96, 165, 250, 0.9);
+}
+
+.checkpoint-arrow-label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(31, 31, 33, 1);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-shadow: none;
+  white-space: nowrap;
+  z-index: 6;
+}
+
+.gpu-flow {
+  position: relative;
+  height: 100px;
+  margin-bottom: 1rem;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.gpu-source {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.5rem;
+}
+
+.gpu-label {
+  color: #a5b4fc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 10;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  transition: all 1s ease;
+  background: rgba(31, 31, 33, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 2px solid rgba(99, 102, 241, 0.4);
+  margin-bottom: 0.5rem;
 }

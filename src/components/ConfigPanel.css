@@ -7,6 +7,59 @@
   border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
+.checkpoint-config {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.control-panel {
+  padding: 1rem;
+  text-align: center;
+}
+
+.storage-config {
+  background: rgba(30, 30, 46, 0.4);
+  backdrop-filter: blur(8px);
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+.vdura-config {
+  border-color: rgba(231, 159, 35, 0.3);
+}
+
+.competitor-config {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.storage-config h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  color: #e0e7ff;
+  font-weight: 600;
+}
+
+.vdura-config h3 {
+  color: var(--vdura-amber);
+}
+
+.competitor-config h3 {
+  color: #93c5fd;
+}
+
+.config-grid-inline {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.config-grid-inline .config-item {
+  flex: 1;
+  min-width: 150px;
+}
+
 .config-panel h2 {
   margin-bottom: 0.5rem;
   color: #a5b4fc;

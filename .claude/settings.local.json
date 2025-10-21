@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(timeout /t 5)",
+      "Bash(npx playwright install chromium)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
